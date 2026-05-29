@@ -9,6 +9,7 @@
   <style>
     /* ─── 디자인 토큰 ─────────────────────────────────────── */
     :root {
+      color-scheme: dark;
       /* 컬러 — 다크 테마 */
       --bg:            #0d1117;
       --surface:       #161b22;
@@ -66,6 +67,8 @@
       color: var(--text);
       line-height: 1.6;
       min-height: 100vh;
+      word-break: keep-all;
+      overflow-wrap: break-word;
     }
 
     a {
@@ -186,6 +189,9 @@
       font-size: var(--fs-sm);
       color: var(--text-dim);
     }
+    .status-ok  { color: var(--c-global-finance); }
+    .status-err { color: var(--score-high); }
+    .config-empty { color: var(--text-dim); font-size: var(--fs-sm); }
 
     .spinner {
       display: inline-block;
@@ -319,11 +325,16 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      transition: border-color .2s, box-shadow .2s;
+      transition: border-color .2s, box-shadow .2s, transform .2s;
     }
     .card:hover {
       border-color: var(--border-soft);
       box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+    .card:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-dim);
     }
 
     /* 알림 카드 — 더 강조 */
@@ -358,16 +369,23 @@
     .alert-badge-card {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       font-size: var(--fs-xs);
       font-weight: 600;
-      color: var(--score-high);
-      background: var(--score-high-bg);
+      color: var(--text-dim);
+      background: var(--surface-2);
       border-radius: var(--r-sm);
-      padding: 2px 7px;
+      padding: 3px 8px;
       letter-spacing: .04em;
     }
-    .alert-badge-card::before { content: '●'; font-size: 7px; }
+    .alert-badge-card::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
 
     /* 카테고리 pill */
     .cat-pill {
@@ -461,13 +479,14 @@
       gap: 6px;
       flex-wrap: wrap;
       font-size: var(--fs-xs);
-      color: var(--text-dimmer);
+      color: var(--text-dim);
       margin-top: auto;
     }
     .card-meta .source {
-      color: var(--text-dim);
+      color: var(--text);
       font-weight: 500;
     }
+    .card-meta time { color: var(--text-dim); }
     .card-meta .dot { color: var(--text-dimmer); }
 
     /* ─── 빈 상태 ─────────────────────────────────────────── */
@@ -498,7 +517,12 @@
     .divider {
       height: 1px;
       background: var(--border);
-      margin: 32px 0;
+      margin: 40px 0;
+    }
+
+    /* ─── 모션 민감 사용자 배려 ─────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: .01ms !important; }
     }
 
     /* ─── 반응형 ─────────────────────────────────────────── */
@@ -566,7 +590,7 @@
               전체 수집 뉴스
               <span id="news-count" class="section-badge news-badge" aria-label="뉴스 수"></span>
             </h2>
-            <p class="section-desc">수집된 전체 뉴스 — 카테고리·중요도 포함</p>
+            <p class="section-desc">수집된 전체 뉴스 — 카테고리·중요도(0–10) 포함</p>
           </div>
         </div>
         <div id="news" class="card-grid" role="list"></div>
@@ -655,7 +679,7 @@ async function loadConfig() {
     const cfg = await (await fetch('/api/config')).json();
     const th  = cfg && cfg.thresholds;
     if (!th) {
-      el.innerHTML = '<span class="config-label">임계값</span><span style="color:var(--text-dim);font-size:13px">설정을 불러올 수 없습니다.</span>';
+      el.innerHTML = '<span class="config-label">임계값</span><span class="config-empty">설정을 불러올 수 없습니다.</span>';
       return;
     }
     const items = Object.keys(th).map(k => {
@@ -669,7 +693,7 @@ async function loadConfig() {
     }).join('');
     el.innerHTML = `<span class="config-label">임계값</span>${items}`;
   } catch (e) {
-    el.innerHTML = '<span class="config-label">임계값</span><span style="color:var(--text-dim);font-size:13px">설정을 불러올 수 없습니다.</span>';
+    el.innerHTML = '<span class="config-label">임계값</span><span class="config-empty">설정을 불러올 수 없습니다.</span>';
   }
 }
 
@@ -710,7 +734,7 @@ function buildCard(it, isAlert) {
       ${reasonHtml}
       <div class="card-meta">
         <span class="source">${safeSrc}</span>
-        ${safeDate ? `<span class="dot" aria-hidden="true">·</span><time>${safeDate}</time>` : ''}
+        ${safeDate ? `<span class="dot" aria-hidden="true">·</span><time datetime="${escapeHtml(it.published_at || '')}">${safeDate}</time>` : ''}
       </div>
     </article>`;
 }
@@ -775,10 +799,10 @@ async function collect() {
     const msg = (r && r.collected !== undefined)
       ? `${r.collected}건 수집 완료`
       : '수집 완료';
-    status.innerHTML = `<span style="color:var(--c-global-finance)">✓</span><span>${msg}</span>`;
+    status.innerHTML = `<span class="status-ok">✓</span><span>${msg}</span>`;
     await load();
   } catch (e) {
-    status.innerHTML = `<span style="color:var(--score-high)">✗</span><span>수집 실패: ${escapeHtml(e.message)}</span>`;
+    status.innerHTML = `<span class="status-err">✗</span><span>수집 실패: ${escapeHtml(e.message)}</span>`;
   } finally {
     btn.disabled = false;
     // 3초 후 상태 메시지 제거
