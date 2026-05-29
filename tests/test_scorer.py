@@ -32,3 +32,34 @@ def test_score_on_failure_leaves_item_unscored():
     out = score([_item()], caller=bad_caller)
     assert out[0].importance_score is None
     assert out[0].send_recommended is False
+
+
+def test_score_survives_caller_exception():
+    def boom_caller(item):
+        raise RuntimeError("boom")
+    out = score([_item()], caller=boom_caller)
+    assert out[0].importance_score is None
+    assert out[0].send_recommended is False
+
+
+def test_score_handles_mixed_batch():
+    calls = {"n": 0}
+
+    def mixed_caller(item):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return '{"score": 7.2, "reason": "근거", "send": true}'
+        return "잘못된 응답"
+
+    out = score([_item(), _item()], caller=mixed_caller)
+    assert out[0].importance_score == 7.2
+    assert out[0].send_recommended is True
+    assert out[1].importance_score is None
+    assert out[1].send_recommended is False
+
+
+def test_parse_clamps_out_of_range_score():
+    high = parse_score_response('{"score": 50, "reason": "r", "send": true}')
+    assert high["score"] == 10.0
+    low = parse_score_response('{"score": -3, "reason": "r", "send": false}')
+    assert low["score"] == 0.0

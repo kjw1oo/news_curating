@@ -24,7 +24,8 @@ def parse_score_response(raw: str) -> dict | None:
         return None
     try:
         d = json.loads(m.group(0))
-        return {"score": float(d["score"]), "reason": str(d["reason"]), "send": bool(d["send"])}
+        score_val = max(0.0, min(10.0, float(d["score"])))
+        return {"score": score_val, "reason": str(d["reason"]), "send": bool(d["send"])}
     except (json.JSONDecodeError, KeyError, ValueError, TypeError):
         return None
 
@@ -42,7 +43,11 @@ def default_caller(item: NewsItem) -> str:
 
 def score(items: list[NewsItem], caller=default_caller) -> list[NewsItem]:
     for it in items:
-        parsed = parse_score_response(caller(it))
+        try:
+            raw = caller(it)
+        except Exception:
+            raw = None
+        parsed = parse_score_response(raw) if raw is not None else None
         if parsed is None:
             it.importance_score = None
             it.send_recommended = False
