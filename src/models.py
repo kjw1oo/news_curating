@@ -1,4 +1,5 @@
 import hashlib
+import dataclasses
 from dataclasses import dataclass, asdict
 from urllib.parse import urlsplit, urlunsplit
 
@@ -46,4 +47,12 @@ class NewsItem:
 
     @classmethod
     def from_dict(cls, d: dict) -> "NewsItem":
+        missing = [
+            k for k, f in cls.__dataclass_fields__.items()
+            if k not in d
+            and f.default is dataclasses.MISSING
+            and f.default_factory is dataclasses.MISSING
+        ]
+        if missing:
+            raise ValueError(f"Missing required fields: {missing}")
         return cls(**{k: d.get(k) for k in cls.__dataclass_fields__})

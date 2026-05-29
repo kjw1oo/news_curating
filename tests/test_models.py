@@ -1,3 +1,5 @@
+import pytest
+
 from src.models import NewsItem, Category, make_id
 
 def test_make_id_is_stable_and_normalized():
@@ -23,3 +25,7 @@ def test_defaults_for_unscored_item():
     assert item.keyword_passed is False
     assert item.importance_score is None
     assert item.send_recommended is False
+
+def test_from_dict_raises_on_missing_required_fields():
+    with pytest.raises(ValueError):
+        NewsItem.from_dict({"id": "x"})
