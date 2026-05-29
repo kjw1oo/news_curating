@@ -1,6 +1,6 @@
 from pathlib import Path
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from src.models import LABELS
 
 _WEB = Path(__file__).resolve().parent.parent / "web"
@@ -34,6 +34,9 @@ def create_app(storage, config, run_collect):
 
     @app.get("/")
     def index():
-        return FileResponse(_WEB / "index.html")
+        path = _WEB / "index.html"
+        if not path.exists():
+            return HTMLResponse("<h1>대시보드 빌드 대기 중</h1>", status_code=503)
+        return FileResponse(path)
 
     return app
