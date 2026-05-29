@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la)",
+      "Bash(ls -la .claude/agents/)",
+      "Bash(ls -la .claude/skills/)",
+      "Bash(ls -la CLAUDE.md)"
+    ]
+  }
+}
