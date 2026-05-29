@@ -13,7 +13,8 @@ from src.collectors.woori import parse_woori_html
 from src.pipeline import run_pipeline
 from src.storage import Storage
 
-CONFIG = yaml.safe_load(Path("config.yaml").read_text(encoding="utf-8"))
+_ROOT = Path(__file__).resolve().parent
+CONFIG = yaml.safe_load((_ROOT / "config.yaml").read_text(encoding="utf-8"))
 
 
 def _demo_caller(item) -> str:
@@ -25,7 +26,7 @@ def _demo_caller(item) -> str:
 
 
 def main():
-    html = Path("tests/fixtures/woori_news.html").read_text(encoding="utf-8")
+    html = (_ROOT / "tests" / "fixtures" / "woori_news.html").read_text(encoding="utf-8")
     collect = lambda: parse_woori_html(html, source_name="토스인베스트")
     storage = Storage("data/news.db")
     result = run_pipeline(collectors=[collect], storage=storage, config=CONFIG, caller=_demo_caller)

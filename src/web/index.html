@@ -12,9 +12,11 @@
   .reason{color:#555;font-size:14px;margin:6px 0}
   .meta{color:#999;font-size:12px} a{color:#2962ff;text-decoration:none}
   .empty{color:#999;text-align:center;padding:32px}
+  .config{background:#f6f8ff;border:1px solid #e3e9ff;border-radius:10px;padding:10px 14px;font-size:13px;color:#444;margin:10px 0}
 </style></head>
 <body>
   <h1>📰 뉴스 모니터링 데모</h1>
+  <div id="config" class="config"></div>
   <div class="row">
     <button onclick="collect()">수집 실행</button>
     <span id="status" class="meta"></span>
@@ -24,6 +26,17 @@
   <h2>전체 수집 뉴스</h2>
   <div id="news"></div>
 <script>
+const LABELS = {global_ai:'글로벌 AI', global_finance_ai:'글로벌 금융 AI', domestic_finance_ai:'국내 금융 AI'};
+async function loadConfig(){
+  const el = document.getElementById('config');
+  try{
+    const cfg = await (await fetch('/api/config')).json();
+    const th = cfg && cfg.thresholds;
+    if(!th){ el.textContent='임계값 설정을 불러올 수 없습니다.'; return; }
+    const parts = Object.keys(th).map(k=>`${LABELS[k]||k}: ${th[k]}`);
+    el.textContent = '임계값 — ' + parts.join(' · ');
+  }catch(e){ el.textContent='임계값 설정을 불러올 수 없습니다.'; }
+}
 async function load(){
   const a = await (await fetch('/api/alerts')).json();
   const n = await (await fetch('/api/news')).json();
@@ -47,6 +60,7 @@ async function collect(){
   document.getElementById('status').textContent='수집 완료: '+JSON.stringify(r);
   load();
 }
+loadConfig();
 load();
 </script>
 </body></html>

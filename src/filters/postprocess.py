@@ -37,7 +37,7 @@ def dedup(items: list[NewsItem]) -> list[NewsItem]:
             groups.append([it])
     for gi, g in enumerate(groups):
         gid = f"g{gi}"
-        winner = max(g, key=lambda x: (x.importance_score or -1))
+        winner = max(g, key=lambda x: (x.send_recommended, x.importance_score or -1))
         for it in g:
             it.dedup_group = gid
             if it is not winner:

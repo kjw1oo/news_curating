@@ -6,7 +6,7 @@ from src.collectors.woori import WooriCollector
 from src.pipeline import run_pipeline
 from src.api.app import create_app
 
-CONFIG = yaml.safe_load(Path("config.yaml").read_text(encoding="utf-8"))
+CONFIG = yaml.safe_load((Path(__file__).resolve().parent / "config.yaml").read_text(encoding="utf-8"))
 STORAGE = Storage("data/news.db")
 
 

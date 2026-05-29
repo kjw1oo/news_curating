@@ -21,6 +21,17 @@ def test_dedup_keeps_one_per_group():
     recommended = [it for it in out if it.send_recommended]
     assert len(recommended) == 1                  # 그룹 내 1건만 유지
 
+def test_dedup_winner_prefers_recommended():
+    # A: 높은 점수지만 임계값 미달로 send=False, B: 낮은 점수지만 send=True
+    items = [_item("u1", 8.0, title="우리금융 생성형 AI 도입", send=False),
+             _item("u2", 5.0, title="우리금융 생성형 AI 도입 발표", send=True)]
+    out = dedup(items)
+    groups = {it.dedup_group for it in out}
+    assert len(groups) == 1                       # 유사 제목 → 같은 그룹
+    recommended = [it for it in out if it.send_recommended]
+    assert len(recommended) == 1                  # 그룹 내 정확히 1건 발송
+    assert recommended[0].url == "u2"             # 살아있는(B) 항목이 winner
+
 def test_dedup_keeps_dissimilar_titles_separate():
     items = [_item("u1", 5.0, title="우리금융 생성형 AI 도입"),
              _item("u2", 6.0, title="삼성전자 반도체 신규 투자")]
