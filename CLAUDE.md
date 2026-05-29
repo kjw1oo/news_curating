@@ -13,3 +13,4 @@
 |------|----------|------|------|
 | 2026-05-29 | 초기 구성 (architect/collector-dev/filter-dev/dashboard-dev/qa-inspector + 6개 스킬 + 오케스트레이터) | 전체 | - |
 | 2026-05-29 | source-researcher·threshold-tuner 추가, 오케스트레이터 3모드 라우팅, Scrapling 크롤링 확정 | agents/, skills/, orchestrator | 소스 결정·학습 루프 갭 보완 |
+| 2026-05-29 | web-designer 에이전트·news-web-design 스킬 추가, WebSearch 수집기·1차 실데이터 적재, 대시보드 다크 테마 리디자인 | agents/, skills/, src/collectors/, src/web/ | 시각 표면 품질·실데이터 검증 |

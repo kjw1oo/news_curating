@@ -1,0 +1,99 @@
+{
+  "global_ai": [
+    {
+      "title": "Google debuts new AI models, personal AI agents to keep pace with OpenAI and Anthropic",
+      "url": "https://www.cnbc.com/2026/05/19/google-ai-ultra-gemini-spark-omni.html",
+      "source": "CNBC",
+      "published_at": "2026-05-19",
+      "summary": "Google debuted Gemini 3.5 Flash and Gemini Spark, a general-purpose AI agent that can reason across connected apps, prioritizing models cheap and fast enough to deploy across products used by billions."
+    },
+    {
+      "title": "How Google plans to win the AI war against Anthropic and OpenAI",
+      "url": "https://www.axios.com/2026/05/21/google-ai-anthropic-openai-war",
+      "source": "Axios",
+      "published_at": "2026-05-21",
+      "summary": "Executives at Google, OpenAI and Anthropic increasingly describe the frontier race as neck-and-neck, making different tradeoffs around cost, speed and computing resources."
+    },
+    {
+      "title": "Anthropic closes $30B round at $900B+ valuation, releases Claude Security",
+      "url": "https://www.buildfastwithai.com/blogs/ai-news-today-may-25-2026",
+      "source": "BuildFastWithAI",
+      "published_at": "2026-05-25",
+      "summary": "Anthropic is closing a $30 billion funding round at a $900 billion-plus valuation and released Claude Security, a beta tool on Claude Opus 4.7 that scans codebases for vulnerabilities, with Microsoft Security and CrowdStrike integrating it."
+    },
+    {
+      "title": "AI Updates Today (May 2026): Latest AI Model Releases",
+      "url": "https://llm-stats.com/llm-updates",
+      "source": "LLM-Stats",
+      "published_at": "2026-05-26",
+      "summary": "A running log of the latest large language model releases and AI model updates across major labs in May 2026."
+    }
+  ],
+  "global_finance_ai": [
+    {
+      "title": "Bowman speech: artificial intelligence in the financial system",
+      "url": "https://www.federalreserve.gov/newsevents/speech/bowman20260501a.htm",
+      "source": "Federal Reserve Board",
+      "published_at": "2026-05-01",
+      "summary": "The Fed, OCC and FDIC amended model risk management guidance to clarify it does not apply to generative or agentic AI, signaling supervisors expect governance practices that encourage ongoing AI innovation in finance."
+    },
+    {
+      "title": "How Generative AI Will Transform Financial Services in 2026",
+      "url": "https://fintechmagazine.com/news/how-generative-ai-will-transform-financial-services-in-2026",
+      "source": "FinTech Magazine",
+      "published_at": "2026-05-15",
+      "summary": "78% of banks have adopted generative AI tactically, up from 8% in 2024; in 2026 generative AI moves from pilots to enterprise-scale use in payments, risk and customer engagement, with front-office productivity gains of 27-35%."
+    },
+    {
+      "title": "Banking Predictions 2026: AI & the Future of Banking",
+      "url": "https://www.backbase.com/banking-predictions-report-2026/ai-and-the-future-of-banking",
+      "source": "Backbase",
+      "published_at": "2026-05-12",
+      "summary": "Only 31% of banks have moved forward with agentic AI implementation; the report forecasts a shift from soft-launched generative AI applications to broad agentic deployment across the banking sector."
+    },
+    {
+      "title": "Generative AI in Banking and Finance Global Market Report 2026",
+      "url": "https://www.thebusinessresearchcompany.com/report/generative-artificial-intelligence-ai-in-banking-and-finance-global-market-report",
+      "source": "The Business Research Company",
+      "published_at": "2026-05-10",
+      "summary": "The generative AI in banking and finance market will grow from $1.75 billion in 2025 to $2.36 billion in 2026 at a 34.8% CAGR, driven by fraud detection, AI customer service and automated compliance."
+    }
+  ],
+  "domestic_finance_ai": [
+    {
+      "title": "우리금융그룹, 3대 전략 축으로 '전사적 AX 추진' 제시",
+      "url": "https://www.digitaltoday.co.kr/news/articleView.html?idxno=618031",
+      "source": "디지털투데이",
+      "published_at": "2026-05-20",
+      "summary": "우리금융그룹이 2026년 3대 전략 축으로 생산적 금융, 전사적 AX(AI 전환) 추진, 그룹 시너지 창출을 제시하며 그룹 차원의 인공지능 디지털 전환에 속도를 내고 있다."
+    },
+    {
+      "title": "[CEO신년사 행간읽기] KB·신한·하나·우리금융 'AI로 새판짜기' 한목소리",
+      "url": "https://www.cnbnews.com/news/article.html?no=772199",
+      "source": "CNB뉴스",
+      "published_at": "2026-05-08",
+      "summary": "KB, 신한, 하나, 우리금융 4대 금융지주 수장이 신년사에서 인공지능을 미래 경쟁력의 핵심으로 지목하며 AI 기반 사업 구조 재편을 공통 화두로 제시했다."
+    },
+    {
+      "title": "AI가 상품 제안·실행까지… KB금융 '에이전틱 뱅킹' 속도전",
+      "url": "https://www.asiatoday.co.kr/kn/view.php?key=20260529010008641",
+      "source": "아시아투데이",
+      "published_at": "2026-05-29",
+      "summary": "KB금융이 연내 AI 에이전트 300여 개 도입을 목표로 상품 제안부터 실행까지 자동화하는 에이전틱 뱅킹 플랫폼 구축에 속도를 내고 있다."
+    },
+    {
+      "title": "신한은행, 150억+α '생성형 AI' 플랫폼 구축 추진",
+      "url": "https://m.bikorea.net/news/articleView.html?idxno=42601",
+      "source": "BIKorea",
+      "published_at": "2026-05-18",
+      "summary": "신한은행이 약 150억 원 규모의 생성형 AI 플랫폼 구축 프로젝트를 약 10개월 일정으로 추진하며 디지털 금융 전환을 가속한다."
+    },
+    {
+      "title": "KB금융, 리벨리온과 'AI 금융' 협약… 국산 AI 반도체 인프라 구축",
+      "url": "https://www.seoul.co.kr/news/economy/finance/2026/05/28/20260528031004",
+      "source": "서울신문",
+      "published_at": "2026-05-28",
+      "summary": "KB금융그룹이 리벨리온과 전략적 업무협약을 맺고 국산 인공지능 반도체 기반 한국형 AI 금융 인프라 구축에 나섰다."
+    }
+  ]
+}
