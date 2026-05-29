@@ -25,6 +25,7 @@ def _similar(a: set[str], b: set[str], threshold: float = 0.6) -> bool:
 
 def dedup(items: list[NewsItem]) -> list[NewsItem]:
     """유사 제목을 같은 dedup_group으로 묶고, 그룹 내 점수 최고 1건만 send_recommended 유지."""
+    # 그룹화는 greedy first-match: 각 그룹의 대표(첫 항목)와만 비교하므로 입력 순서에 의존 — MVP에서는 허용.
     groups: list[list[NewsItem]] = []
     for it in items:
         tokens = _norm_tokens(it.title)

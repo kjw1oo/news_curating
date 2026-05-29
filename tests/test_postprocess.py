@@ -20,3 +20,21 @@ def test_dedup_keeps_one_per_group():
     assert len(groups) == 1                       # 유사 제목 → 같은 그룹
     recommended = [it for it in out if it.send_recommended]
     assert len(recommended) == 1                  # 그룹 내 1건만 유지
+
+def test_dedup_keeps_dissimilar_titles_separate():
+    items = [_item("u1", 5.0, title="우리금융 생성형 AI 도입"),
+             _item("u2", 6.0, title="삼성전자 반도체 신규 투자")]
+    out = dedup(items)
+    groups = {it.dedup_group for it in out}
+    assert len(groups) == 2                       # 서로 다른 주제 → 별개 그룹
+    assert all(it.send_recommended for it in out) # 각자 그룹 winner이므로 유지
+
+def test_dedup_empty_list_returns_empty():
+    assert dedup([]) == []
+    assert apply_threshold([], {}) == []
+
+def test_apply_threshold_uses_default_cutoff_for_unlisted_category():
+    items = [_item("u1", 4.0), _item("u2", 6.0)]
+    out = apply_threshold(items, thresholds={})   # 카테고리 미등록 → 기본 5.0
+    assert out[0].send_recommended is False        # 4.0 < 5.0
+    assert out[1].send_recommended is True         # 6.0 >= 5.0
