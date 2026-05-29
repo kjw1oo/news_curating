@@ -19,3 +19,50 @@ def test_parse_woori_html_normalizes_items():
 
 def test_parse_handles_empty_html():
     assert parse_woori_html("<html></html>", source_name="토스") == []
+
+
+def test_parse_graceful_degradation():
+    html = """
+    <html><body><ul>
+      <li class="news-item"><span class="source">노링크</span></li>
+      <li class="news-item"><a href="https://www.tossinvest.com/news/200">제목만</a></li>
+    </ul></body></html>
+    """
+    items = parse_woori_html(html, source_name="토스")
+    # <a> 없는 노드는 스킵 → 1건만
+    assert len(items) == 1
+    only = items[0]
+    assert only.title == "제목만"
+    assert only.source == "토스"  # .source 없으면 source_name 폴백
+    assert only.published_at == ""  # <time> 없으면 빈 문자열
+    assert only.summary_raw == ""  # .desc 없으면 빈 문자열
+
+
+def test_parse_truncates_long_desc():
+    long_desc = "가" * 2000
+    html = f"""
+    <html><body><ul>
+      <li class="news-item">
+        <a href="https://www.tossinvest.com/news/300">긴 설명</a>
+        <p class="desc">{long_desc}</p>
+      </li>
+    </ul></body></html>
+    """
+    items = parse_woori_html(html, source_name="토스")
+    assert len(items) == 1
+    assert len(items[0].summary_raw) == 1000
+
+
+def test_parse_resolves_relative_url():
+    html = """
+    <html><body><ul>
+      <li class="news-item">
+        <a href="/news/999">상대경로</a>
+      </li>
+    </ul></body></html>
+    """
+    items = parse_woori_html(
+        html, source_name="토스", base_url="https://www.tossinvest.com"
+    )
+    assert len(items) == 1
+    assert items[0].url == "https://www.tossinvest.com/news/999"
