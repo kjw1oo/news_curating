@@ -24,3 +24,49 @@ def test_run_pipeline_collects_filters_scores_stores(tmp_path):
     assert stored[0].importance_score == 6.0
     assert stored[0].send_recommended is True
     assert result["collected"] == 2 and result["stored"] == 1
+
+
+def test_pipeline_skips_failing_collector(tmp_path):
+    st = Storage(tmp_path / "p.db")
+
+    def bad():
+        raise RuntimeError("source down")
+
+    good = lambda: [_raw("https://t/1", "우리금융 AI 플랫폼 확대")]
+    fake_caller = lambda item: '{"score": 6.0, "reason": "의미 있음", "send": true}'
+    config = {"keyword_filters": ["AI"], "thresholds": {Category.DOMESTIC_FINANCE_AI: 4.0}}
+
+    result = run_pipeline(collectors=[bad, good], storage=st, config=config, caller=fake_caller)
+
+    assert result["collected"] == 1
+    assert len(st.query()) == 1
+
+
+def test_pipeline_stores_below_threshold_item_as_not_recommended(tmp_path):
+    st = Storage(tmp_path / "p.db")
+    collect = lambda: [_raw("https://t/1", "우리금융 AI 플랫폼 확대")]
+    fake_caller = lambda item: '{"score": 2.0, "reason": "약함", "send": true}'
+    config = {"keyword_filters": ["AI"], "thresholds": {Category.DOMESTIC_FINANCE_AI: 4.0}}
+
+    result = run_pipeline(collectors=[collect], storage=st, config=config, caller=fake_caller)
+
+    stored = st.query()
+    assert len(stored) == 1
+    assert stored[0].send_recommended is False
+    assert result["recommended"] == 0
+
+
+def test_pipeline_dedup_merges_similar_titles(tmp_path):
+    st = Storage(tmp_path / "p.db")
+    collected = [_raw("https://t/1", "우리금융 AI 플랫폼 확대 발표"),
+                 _raw("https://t/2", "우리금융 AI 플랫폼 확대 공식 발표")]
+    collect = lambda: collected
+    fake_caller = lambda item: '{"score": 6.0, "reason": "의미 있음", "send": true}'
+    config = {"keyword_filters": ["AI"], "thresholds": {Category.DOMESTIC_FINANCE_AI: 4.0}}
+
+    result = run_pipeline(collectors=[collect], storage=st, config=config, caller=fake_caller)
+
+    stored = st.query()
+    assert len(stored) == 2
+    assert sum(1 for i in stored if i.send_recommended) == 1
+    assert result["recommended"] == 1

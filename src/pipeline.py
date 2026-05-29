@@ -16,4 +16,9 @@ def run_pipeline(collectors, storage, config, caller=default_caller) -> dict:
     gated = apply_threshold(scored, config.get("thresholds", {}))
     final = dedup(gated)
     storage.upsert(final)
-    return {"collected": len(collected), "kept": len(passed), "stored": len(final)}
+    return {
+        "collected": len(collected),
+        "kept": len(passed),
+        "stored": len(final),
+        "recommended": sum(1 for i in final if i.send_recommended),
+    }
