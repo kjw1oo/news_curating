@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>뉴스 모니터링 데모</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:880px;margin:24px auto;padding:0 16px;color:#1a1a1a}
+  h1{font-size:20px} .row{display:flex;gap:8px;align-items:center;margin:12px 0}
+  button{padding:8px 14px;border:0;border-radius:8px;background:#2962ff;color:#fff;cursor:pointer}
+  .card{border:1px solid #e3e3e3;border-radius:12px;padding:14px;margin:10px 0}
+  .label{display:inline-block;font-size:12px;background:#eef2ff;color:#2962ff;padding:2px 8px;border-radius:999px}
+  .score{float:right;font-weight:700}
+  .reason{color:#555;font-size:14px;margin:6px 0}
+  .meta{color:#999;font-size:12px} a{color:#2962ff;text-decoration:none}
+  .empty{color:#999;text-align:center;padding:32px}
+</style></head>
+<body>
+  <h1>📰 뉴스 모니터링 데모</h1>
+  <div class="row">
+    <button onclick="collect()">수집 실행</button>
+    <span id="status" class="meta"></span>
+  </div>
+  <h2>발송 대상 알림</h2>
+  <div id="alerts"></div>
+  <h2>전체 수집 뉴스</h2>
+  <div id="news"></div>
+<script>
+async function load(){
+  const a = await (await fetch('/api/alerts')).json();
+  const n = await (await fetch('/api/news')).json();
+  render('alerts', a.items); render('news', n.items);
+}
+function render(id, items){
+  const el = document.getElementById(id);
+  if(!items || items.length===0){ el.innerHTML='<div class="empty">표시할 뉴스가 없습니다.</div>'; return; }
+  el.innerHTML = items.map(it=>`
+    <div class="card">
+      <span class="score">${it.importance_score ?? '-'}</span>
+      <span class="label">${it.category_label}</span>
+      <h3><a href="${it.url}" target="_blank" rel="noopener">${it.title}</a></h3>
+      <div class="reason">${it.importance_reason || ''}</div>
+      <div class="meta">${it.source} · ${it.published_at}</div>
+    </div>`).join('');
+}
+async function collect(){
+  document.getElementById('status').textContent='수집 중...';
+  const r = await (await fetch('/api/collect',{method:'POST'})).json();
+  document.getElementById('status').textContent='수집 완료: '+JSON.stringify(r);
+  load();
+}
+load();
+</script>
+</body></html>
