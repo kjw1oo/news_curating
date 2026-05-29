@@ -1,0 +1,16 @@
+thresholds:
+  global_ai: 8.5
+  global_finance_ai: 7.0
+  domestic_finance_ai: 4.0
+monthly_cap:
+  global_finance_ai: 1
+collect_interval_hours: 6
+dedup_window_hours: 24
+batch_window_minutes: 90
+keyword_filters: [AI, 인공지능, LLM, 머신러닝, 데이터, 디지털, 마이데이터]
+retry_max: 3
+sources:
+  woori:
+    name: 우리금융지주
+    toss_stock: A316140
+    category: domestic_finance_ai
