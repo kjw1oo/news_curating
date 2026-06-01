@@ -8,13 +8,15 @@ class Category:
     GLOBAL_AI = "global_ai"
     GLOBAL_FINANCE_AI = "global_finance_ai"
     DOMESTIC_FINANCE_AI = "domestic_finance_ai"
-    ALL = (GLOBAL_AI, GLOBAL_FINANCE_AI, DOMESTIC_FINANCE_AI)
+    WOORI = "woori"
+    ALL = (GLOBAL_AI, GLOBAL_FINANCE_AI, DOMESTIC_FINANCE_AI, WOORI)
 
 
 LABELS = {
     Category.GLOBAL_AI: "글로벌 AI",
     Category.GLOBAL_FINANCE_AI: "글로벌 금융 AI",
     Category.DOMESTIC_FINANCE_AI: "국내 금융 AI",
+    Category.WOORI: "우리금융그룹",
 }
 
 

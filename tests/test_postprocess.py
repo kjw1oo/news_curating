@@ -40,6 +40,34 @@ def test_dedup_keeps_dissimilar_titles_separate():
     assert len(groups) == 2                       # 서로 다른 주제 → 별개 그룹
     assert all(it.send_recommended for it in out) # 각자 그룹 winner이므로 유지
 
+def test_dedup_groups_korean_josa_variants():
+    # 동일 이벤트, 한글 조사만 다른 변형 → 같은 그룹으로 묶여야 한다(조사 정규화).
+    items = [_item("u1", 5.0, title="우리금융 생성형 AI 플랫폼 전 계열사 도입"),
+             _item("u2", 6.0, title="우리금융이 생성형 AI 플랫폼을 전 계열사에 도입")]
+    out = dedup(items)
+    assert len({it.dedup_group for it in out}) == 1
+    assert sum(1 for it in out if it.send_recommended) == 1
+
+
+def test_strip_josa_does_not_over_normalize_roots():
+    # 조사처럼 끝나도 어근이 짧아지면 보존(은행/투자/데이터 등 과잉제거 금지).
+    from src.filters.postprocess import _strip_josa
+    for root in ("데이터", "은행", "투자", "하나", "지주", "거버넌스"):
+        assert _strip_josa(root) == root
+    # 실제 조사 부착형은 정규화
+    assert _strip_josa("우리금융이") == "우리금융"
+    assert _strip_josa("플랫폼을") == "플랫폼"
+    assert _strip_josa("계열사에서") == "계열사"
+
+
+def test_dedup_keeps_korean_distinct_topics_separate():
+    # 조사 정규화가 서로 다른 주제를 잘못 합치지 않는지(FP 방지).
+    items = [_item("u1", 5.0, title="우리금융 마이데이터 서비스 출시"),
+             _item("u2", 6.0, title="삼성전자 반도체 신규 투자 발표")]
+    out = dedup(items)
+    assert len({it.dedup_group for it in out}) == 2
+
+
 def test_dedup_empty_list_returns_empty():
     assert dedup([]) == []
     assert apply_threshold([], {}) == []

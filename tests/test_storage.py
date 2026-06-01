@@ -31,6 +31,27 @@ def test_query_filters_by_category(tmp_path):
     res = st.query(category=Category.DOMESTIC_FINANCE_AI)
     assert len(res) == 1 and res[0].category == Category.DOMESTIC_FINANCE_AI
 
+def _dated(url, published_at):
+    return NewsItem(id=make_id(url), category=Category.GLOBAL_AI, title="t", url=url,
+                    source="s", published_at=published_at, collected_at="", summary_raw="s")
+
+def test_query_filters_by_max_age_days(tmp_path):
+    from datetime import date
+    st = Storage(tmp_path / "t.db")
+    st.upsert([_dated("https://t.com/recent", "2026-05-28T00:00:00+09:00"),   # 4일 전
+               _dated("https://t.com/old", "2026-05-01T00:00:00+09:00")])      # 31일 전
+    today = date(2026, 6, 1)
+    res = st.query(max_age_days=7, today=today)
+    assert len(res) == 1 and res[0].url == "https://t.com/recent"
+    assert len(st.query(max_age_days=0, today=today)) == 2     # 0 = 전체
+    assert len(st.query(today=today)) == 2                      # 미지정 = 전체
+
+def test_max_age_keeps_undated_items(tmp_path):
+    from datetime import date
+    st = Storage(tmp_path / "t.db")
+    st.upsert([_dated("https://t.com/x", "")])                  # 날짜 불명
+    assert len(st.query(max_age_days=7, today=date(2026, 6, 1))) == 1   # 숨기지 않음
+
 def test_bool_fields_roundtrip_as_bool(tmp_path):
     from src.models import NewsItem, Category, make_id
     st = Storage(tmp_path / "t.db")
