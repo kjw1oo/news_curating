@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>뉴스 모니터링 대시보드</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,11 +16,12 @@
       --surface-2:     #1f2937;
       --surface-3:     #253345;
       --text:          #e6edf3;
-      --text-dim:      #8b949e;
+      --text-dim:      #a3acb8;  /* AAA 지향 — bg 8.25:1 / surface 7.54:1 */
       --text-dimmer:   #4d5566;
       --border:        #21262d;
       --border-soft:   #30363d;
       --accent:        #4d9cf6;
+      --accent-strong: #2563eb;  /* 버튼 배경 — 흰 글자 대비 5.17:1 */
       --accent-dim:    rgba(77,156,246,.12);
 
       /* 카테고리 액센트 */
@@ -30,6 +31,8 @@
       --c-global-finance-bg:rgba(52,211,153,.1);
       --c-domestic-finance: #fbbf24;  /* 앰버 — 국내 금융 AI */
       --c-domestic-finance-bg:rgba(251,191,36,.1);
+      --c-woori:            #22d3ee;  /* 시안 — 우리금융그룹 */
+      --c-woori-bg:         rgba(34,211,238,.1);
 
       /* 점수 시그널 */
       --score-high:    #f87171;   /* 8–10 */
@@ -82,11 +85,33 @@
       border-radius: 3px;
     }
 
+    /* 건너뛰기 링크 — 키보드 사용자가 sticky 헤더를 우회 */
+    .skip-link {
+      position: absolute;
+      left: 12px;
+      top: -48px;
+      z-index: 200;
+      background: var(--accent-strong);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: var(--r-sm);
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      transition: top .15s;
+    }
+    .skip-link:focus {
+      top: 12px;
+      text-decoration: none;
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
+
     /* ─── 레이아웃 ─────────────────────────────────────────── */
     .container {
       max-width: 1040px;
       margin: 0 auto;
-      padding: 0 20px;
+      /* 노치·둥근 모서리(가로모드) 침범 방지 — 베이스 패딩에 safe-area inset 가산 */
+      padding: 0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left));
     }
 
     /* ─── 헤더 ─────────────────────────────────────────────── */
@@ -104,7 +129,7 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      padding: 14px 20px;
+      padding: 14px max(20px, env(safe-area-inset-right)) 14px max(20px, env(safe-area-inset-left));
       max-width: 1040px;
       margin: 0 auto;
       flex-wrap: wrap;
@@ -168,6 +193,8 @@
     .btn:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
+      /* 진한 버튼 위에서도 링이 분리되도록 어두운 갭(2색 포커스링) */
+      box-shadow: 0 0 0 2px var(--bg);
     }
     .btn:disabled {
       opacity: .45;
@@ -176,10 +203,29 @@
     }
 
     .btn-primary {
-      background: var(--accent);
+      background: var(--accent-strong);
       color: #fff;
     }
     .btn-primary:hover:not(:disabled) { opacity: .88; }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: var(--fs-xs);
+    }
+
+    .btn-ghost {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border-soft);
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--surface-3); }
+
+    .send-status {
+      font-size: var(--fs-sm);
+      color: var(--text-dim);
+    }
+    .send-status .status-ok  { color: var(--c-global-finance); }
+    .send-status .status-err { color: var(--score-high); }
 
     /* ─── 수집 상태 ─────────────────────────────────────────── */
     .collect-status {
@@ -226,7 +272,7 @@
       border: 1px solid var(--border);
       border-radius: var(--r);
       padding: 14px 18px;
-      margin: 20px 0;
+      /* margin 제거 — 개요 탭에서 h2(tab-section-desc) 아래 20px 리듬을 따르도록 */
       display: flex;
       align-items: center;
       gap: 8px;
@@ -261,10 +307,13 @@
     }
 
     .threshold-name { color: var(--text-dim); }
-    .threshold-value { font-weight: 700; color: var(--text); }
+    .threshold-value { font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
 
     /* ─── 섹션 ─────────────────────────────────────────────── */
-    main { padding: 0 0 48px; }
+    main { padding: 0 0 calc(48px + env(safe-area-inset-bottom)); }
+
+    /* sticky 헤더+탭바 가림 방지 — 앵커/포커스 스크롤 시 두 sticky 바 높이(75+45)만큼 여백 */
+    #main-content, .section-title, .card { scroll-margin-top: 132px; }
 
     .section { margin-bottom: 40px; }
 
@@ -276,7 +325,8 @@
     }
 
     .section-title {
-      font-size: var(--fs-xl);
+      /* 유체 — 작은폰(18px)→데스크톱(22px) 매끄럽게(640px 하드 점프 제거) */
+      font-size: clamp(18px, 4.2vw, 22px);
       font-weight: 700;
       letter-spacing: -0.025em;
     }
@@ -291,11 +341,12 @@
       border-radius: 999px;
       font-size: var(--fs-xs);
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }
 
     .section-badge.alert-badge {
-      background: rgba(248,113,113,.15);
-      color: var(--score-high);
+      background: var(--accent-dim);
+      color: var(--accent);
     }
 
     .section-badge.news-badge {
@@ -312,7 +363,8 @@
     /* ─── 카드 그리드 ─────────────────────────────────────── */
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      /* 288px floor — 작은 태블릿(~592px 콘텐츠)부터 2열 확보(640~676 단일 초대형 카드 해소) */
+      grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
       gap: var(--gap);
     }
 
@@ -324,7 +376,7 @@
       padding: 18px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;  /* 4px 그리드 정렬 — 스켈레톤과 동일 리듬 */
       transition: border-color .2s, box-shadow .2s, transform .2s;
     }
     .card:hover {
@@ -348,6 +400,7 @@
     .card-alert[data-cat="global_ai"]          { border-left-color: var(--c-global-ai); }
     .card-alert[data-cat="global_finance_ai"]  { border-left-color: var(--c-global-finance); }
     .card-alert[data-cat="domestic_finance_ai"]{ border-left-color: var(--c-domestic-finance); }
+    .card-alert[data-cat="woori"]              { border-left-color: var(--c-woori); }
 
     /* 카드 상단 행 */
     .card-top {
@@ -409,6 +462,10 @@
       background: var(--c-domestic-finance-bg);
       color: var(--c-domestic-finance);
     }
+    .cat-pill.cat-woori {
+      background: var(--c-woori-bg);
+      color: var(--c-woori);
+    }
     .cat-pill.cat-unknown {
       background: var(--surface-2);
       color: var(--text-dim);
@@ -426,6 +483,7 @@
       font-size: var(--fs-sm);
       font-weight: 700;
       letter-spacing: -.01em;
+      font-variant-numeric: tabular-nums;
     }
     .score-badge.score-high {
       background: var(--score-high-bg);
@@ -437,11 +495,11 @@
     }
     .score-badge.score-low {
       background: var(--score-low-bg);
-      color: #8b949e;
+      color: var(--text-dim);
     }
     .score-badge.score-null {
       background: var(--surface-2);
-      color: var(--text-dimmer);
+      color: var(--text-dim);
     }
 
     /* 카드 제목 */
@@ -488,6 +546,141 @@
     }
     .card-meta time { color: var(--text-dim); }
     .card-meta .dot { color: var(--text-dimmer); }
+    .card-meta .dup-badge {
+      color: var(--text-dim);
+      background: var(--surface-2);
+      border-radius: var(--r-sm);
+      padding: 1px 6px;
+      font-size: var(--fs-xs);
+    }
+
+    /* ─── 피드백 버튼 ─────────────────────────────────────── */
+    .card-feedback {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .card-feedback .fb-label {
+      font-size: var(--fs-xs);
+      color: var(--text-dim);
+      margin-right: 2px;
+    }
+    .fb-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 9px;
+      border: 1px solid var(--border-soft);
+      border-radius: var(--r-sm);
+      background: var(--surface-2);
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .fb-btn:hover:not(:disabled) { background: var(--surface-3); color: var(--text); }
+    .fb-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .fb-btn:disabled { cursor: default; }
+    .fb-btn.fb-good.is-active     { background: var(--c-global-finance-bg); color: var(--c-global-finance); border-color: var(--c-global-finance); }
+    .fb-btn.fb-fp.is-active       { background: var(--score-high-bg);       color: var(--score-high);       border-color: var(--score-high); }
+    .fb-btn.fb-fn.is-active       { background: var(--score-mid-bg);        color: var(--score-mid);        border-color: var(--score-mid); }
+
+    /* ─── 발송 이력 ───────────────────────────────────────── */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .history-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: var(--fs-sm);
+    }
+    .history-row:last-child { border-bottom: 0; }
+    .history-row .h-time {
+      color: var(--text-dim);
+      font-size: var(--fs-xs);
+      flex-shrink: 0;
+      min-width: 116px;
+    }
+    .history-row .h-title {
+      flex: 1;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .history-row .h-channel {
+      flex-shrink: 0;
+      font-size: var(--fs-xs);
+      color: var(--text-dim);
+      background: var(--surface-2);
+      border: 1px solid var(--border-soft);
+      border-radius: var(--r-sm);
+      padding: 2px 8px;
+    }
+    .history-empty {
+      padding: 28px 16px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: var(--fs-sm);
+    }
+
+    @media (max-width: 640px) {
+      /* 모바일 발송이력 — 제목 전체폭 1행, 그 아래 시각+채널 메타 1행으로 스택 */
+      .history-row { flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+      .history-row .h-title { white-space: normal; order: -1; flex: 1 0 100%; font-weight: 500; }
+      .history-row .h-time { min-width: 0; }
+    }
+
+    /* ─── 스켈레톤 로딩 ─────────────────────────────────────── */
+    .skeleton-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sk-line {
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%);
+      background-size: 400% 100%;
+      animation: sk-shimmer 1.4s ease infinite;
+    }
+    .sk-line.sk-pill   { width: 88px;  height: 18px; border-radius: 999px; }
+    .sk-line.sk-title  { width: 100%;  height: 16px; }
+    .sk-line.sk-title2 { width: 72%;   height: 16px; }
+    .sk-line.sk-reason { width: 92%;   height: 32px; border-radius: 8px; }
+    .sk-line.sk-meta   { width: 44%;   height: 10px; }
+    .skeleton-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .skeleton-row:last-child { border-bottom: 0; }
+    .skeleton-row .sk-h-time  { width: 116px; flex-shrink: 0; }
+    .skeleton-row .sk-h-title { flex: 1; }
+    .skeleton-row .sk-h-chan  { width: 56px; flex-shrink: 0; }
+    @keyframes sk-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .sk-line { animation: none; background: var(--surface-2); }
+    }
 
     /* ─── 빈 상태 ─────────────────────────────────────────── */
     .empty-state {
@@ -506,11 +699,13 @@
     .empty-state p {
       font-size: var(--fs-base);
       margin-bottom: 6px;
+      color: var(--text);       /* 주 메시지를 hint보다 위계 우위로 */
+      font-weight: 500;
     }
 
     .empty-state .empty-hint {
       font-size: var(--fs-sm);
-      color: var(--text-dimmer);
+      color: var(--text-dim);
     }
 
     /* ─── 구분선 ─────────────────────────────────────────── */
@@ -520,22 +715,449 @@
       margin: 40px 0;
     }
 
+    /* ─── 탭 네비게이션 ───────────────────────────────────── */
+    .tabs {
+      position: sticky;
+      top: 75px;                 /* 데스크톱 헤더 높이(75px)에 정확히 도킹 — 겹침 방지 */
+      z-index: 90;
+      background: rgba(13,17,23,.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      /* body 직계 자식 — 이미 뷰포트 전폭. 음수 마진(이전)은 폭을 viewport+40px로
+         부풀려 좁은 폭에서 가로 오버플로를 유발했음. 마진 0 + 컨테이너와 동일한
+         좌우 거터(20px, safe-area 가산)로 tablist를 카드 그리드에 정렬한다. */
+      padding: 0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left));
+      position: sticky; /* (재선언 무해 — 상단 top:75px 유지) */
+    }
+    /* 탭바 가로 스크롤 어포던스 — 스크롤바 숨김 상태에서 "더 있음"을 끝 페이드로 암시.
+       JS가 스크롤 위치에 따라 .scroll-start/.scroll-end 클래스를 토글한다(좁은폭만 활성). */
+    .tabs::before, .tabs::after {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 1px;       /* 하단 보더 1px 위까지 */
+      width: 28px;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    .tabs::before { left: 0;  background: linear-gradient(90deg, var(--bg), transparent); }
+    .tabs::after  { right: 0; background: linear-gradient(270deg, var(--bg), transparent); }
+    .tabs.scroll-start::before { opacity: 1; }
+    .tabs.scroll-end::after    { opacity: 1; }
+    .tablist {
+      display: flex;
+      gap: 4px;
+      max-width: 1040px;
+      margin: 0 auto;
+      overflow-x: auto;
+      scrollbar-width: none;
+      /* iOS 관성 스크롤 — 탭이 넘칠 때 부드러운 가로 스크롤 */
+      -webkit-overflow-scrolling: touch;
+    }
+    .tablist::-webkit-scrollbar { display: none; }
+
+    .tab {
+      position: relative;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 13px 14px;
+      border: 0;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color .15s;
+    }
+    .tab:hover { color: var(--text); }
+    .tab::after {
+      content: '';
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: -1px;
+      height: 2px;
+      border-radius: 2px 2px 0 0;
+      background: transparent;
+      transition: background .15s;
+    }
+    .tab[aria-selected="true"] {
+      color: var(--text);
+    }
+    .tab[aria-selected="true"]::after {
+      background: var(--accent);
+    }
+    .tab:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      border-radius: var(--r-sm);
+    }
+    .tab .tab-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      color: var(--text-dim);
+      font-size: var(--fs-xs);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .tab[aria-selected="true"] .tab-count {
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .tabpanel { padding-top: 24px; }
+    .tabpanel[hidden] { display: none; }
+    .tabpanel:focus-visible { outline: none; }
+
+    /* ─── 개요 스탯 카드 ──────────────────────────────────── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: var(--gap);
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    /* 클릭 가능한 스탯 카드 — 해당 카테고리 뉴스로 이동 */
+    .stat-card.is-clickable {
+      cursor: pointer;
+      text-align: left;
+      transition: border-color .15s ease, background .15s ease, transform .12s ease;
+    }
+    .stat-card.is-clickable:hover { background: var(--surface-2); border-color: var(--accent); }
+    .stat-card.is-clickable:active { transform: translateY(1px); }
+    .stat-card.is-clickable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { .stat-card.is-clickable { transition: none; } }
+    .stat-card .stat-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .stat-card .stat-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .stat-card .stat-name {
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      color: var(--text-dim);
+      letter-spacing: .02em;
+    }
+    .stat-card .stat-value {
+      font-size: var(--fs-2xl);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+    .stat-card .stat-sub {
+      font-size: var(--fs-xs);
+      color: var(--text-dim);
+    }
+    .stat-card .stat-sub strong {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .stat-card.stat-accent {
+      background: linear-gradient(135deg, var(--accent-dim), transparent);
+      border-color: rgba(77,156,246,.3);
+    }
+    /* 조용한(0건) 카테고리 — 값을 dim 처리해 활성 카테고리와 위계 분리(여전히 가독) */
+    .stat-card.stat-quiet .stat-value { color: var(--text-dim); }
+
+    /* ─── 카테고리 미니 섹션(개요) ────────────────────────── */
+    .cat-mini {
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surface);
+      padding: 0;
+      margin-bottom: var(--gap);
+      overflow: hidden;
+    }
+    .cat-mini-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      border-left: 3px solid var(--border-soft);
+    }
+    .cat-mini-head .cm-title {
+      font-size: var(--fs-base);
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+    .cat-mini-head .cm-counts {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: var(--fs-xs);
+      color: var(--text-dim);
+    }
+    .cat-mini-head .cm-alert {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .cat-mini-head .cm-alert::before {
+      content: '';
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .cat-mini-list {
+      display: flex;
+      flex-direction: column;
+    }
+    .cat-mini-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cat-mini-item:last-child { border-bottom: 0; }
+    /* 행 전체에 링크가 있어 스캔 시 호버 어포던스 제공 */
+    .cat-mini-item:hover { background: var(--surface-2); }
+    .cat-mini-item:focus-within { background: var(--surface-2); }
+    .cat-mini-item .cmi-score {
+      flex-shrink: 0;
+    }
+    .cat-mini-item .cmi-title {
+      flex: 1;
+      min-width: 0;
+      font-size: var(--fs-sm);
+      line-height: 1.4;
+      /* 개요 요약 리스트는 "한눈에" 스캔 목적 — 좁은 폭에서 제목 4줄 폭주를 막아
+         2줄로 클램프(행 높이 안정). 전체 제목은 카드 탭·aria-label에 보존(정보 손실 0). */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .cat-mini-item .cmi-title a { color: var(--text); }
+    .cat-mini-item .cmi-title a:hover { color: var(--accent); }
+    .cat-mini-item .cmi-flag {
+      flex-shrink: 0;
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .cat-mini-empty {
+      padding: 18px 16px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: var(--fs-sm);
+    }
+    .overview-grid {
+      display: grid;
+      /* 2컬럼 — 카테고리(넓게) | 발송 이력(사이드바). 좁은 폭(<860)은 1열 스택 */
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      gap: var(--gap);
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .overview-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ─── 카테고리 필터 칩(카테고리별 탭) ─────────────────── */
+    .cat-filter {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .bc-subhead {
+      font-size: var(--fs-base);
+      font-weight: 700;
+      color: var(--text);
+      margin: 8px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    /* 접기 토글 버튼 */
+    button.bc-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: 0;
+      border-bottom: 1px solid var(--border-soft);
+      border-radius: 0;
+      cursor: pointer;
+    }
+    button.bc-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .bc-chevron { font-size: 11px; color: var(--text-dim); transition: transform .15s ease; }
+    button.bc-toggle[aria-expanded="false"] .bc-chevron { transform: rotate(-90deg); }
+    .bc-count { font-size: var(--fs-xs); font-weight: 600; color: var(--text-dim); }
+    @media (prefers-reduced-motion: reduce) { .bc-chevron { transition: none; } }
+    #by-category-today { margin-bottom: 24px; }
+    .cat-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      border: 1px solid var(--border-soft);
+      border-radius: 999px;
+      background: var(--surface);
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .cat-chip .chip-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .cat-chip .chip-n { color: var(--text-dim); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .cat-chip:hover { background: var(--surface-2); color: var(--text); }
+    .cat-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .cat-chip[aria-pressed="true"] {
+      background: var(--surface-3);
+      color: var(--text);
+      /* 활성 칩은 해당 카테고리 색 보더(없으면 accent)로 선택 상태를 의미적·시각적으로 강화 */
+      border-color: var(--chip-c, var(--accent));
+    }
+    .cat-chip[aria-pressed="true"] .chip-n { color: var(--text); }
+
+    /* ─── 카테고리 그룹 헤더(중요뉴스 탭) ─────────────────── */
+    .cat-group { margin-bottom: 32px; }
+    .cat-group-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cat-group-head .cg-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .cat-group-head .cg-title {
+      font-size: var(--fs-lg);
+      font-weight: 700;
+      letter-spacing: -.01em;
+    }
+    .cat-group-head .cg-count {
+      font-size: var(--fs-xs);
+      color: var(--text-dim);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tab-section-title {
+      font-size: clamp(18px, 4.2vw, 22px);
+      font-weight: 700;
+      letter-spacing: -.025em;
+      margin-bottom: 4px;
+    }
+    .tab-section-desc {
+      font-size: var(--fs-sm);
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+    .overview-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .overview-actions .oa-status {
+      font-size: var(--fs-sm);
+      color: var(--text-dim);
+    }
+
     /* ─── 모션 민감 사용자 배려 ─────────────────────────────── */
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { transition-duration: .01ms !important; }
+      *, *::before, *::after {
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+      .card:hover { transform: none; }
     }
 
     /* ─── 반응형 ─────────────────────────────────────────── */
     @media (max-width: 640px) {
-      .header-inner { padding: 12px 16px; gap: 10px; }
-      .container { padding: 0 14px; }
+      .container { padding: 0 max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left)); }
       .card-grid { grid-template-columns: 1fr; }
-      .section-title { font-size: 18px; }
-      .config-panel { flex-direction: column; align-items: flex-start; gap: 8px; }
+      /* 임계값 칩은 세로 스택 대신 가로 줄바꿈(수직 공간 절약) */
+      .config-panel { gap: 8px; }
+      .section-header { flex-wrap: wrap; }
+
+      /* 모바일 헤더 컴팩트 — 로고+제목+수집을 한 행으로(뷰포트 예산 절약) */
+      .header-inner { padding: 10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left)); gap: 10px; flex-wrap: nowrap; }
+      .header-title { min-width: 0; gap: 8px; }
+      .header-title h1 { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .header-title .subtitle { display: none; }  /* 좁은 폭에서 서브타이틀 숨김 */
+
+      /* 섹션 발송 액션 — 좁은폭에서 상태문구가 버튼 아래로 자연 줄바꿈(오버플로 방지) */
+      .section-header .header-actions { flex-wrap: wrap; justify-content: flex-end; }
+      .header-logo { width: 28px; height: 28px; font-size: 14px; }
+      .header-actions { flex-shrink: 0; }
+
+      /* 터치 타깃 44px — WCAG 2.5.5 / 모바일 한정(데스크톱 밀도 보존) */
+      .btn { min-height: 44px; }
+      .btn-sm { min-height: 44px; padding: 6px 16px; }
+      .fb-btn { min-height: 44px; padding: 4px 14px; }
+      /* 줄바꿈된 탭타깃 인접 간격 8px+ (오탭 방지, WCAG 2.5.8 정신) */
+      .card-feedback { gap: 8px; }
+      /* 카테고리 필터 칩 — 모바일 1차 인터랙션이라 44px 터치타깃(WCAG 2.5.5).
+         탭/피드백/버튼과 동일 기준으로 통일(35px→44px). 행간 8px은 이미 충족. */
+      .cat-chip { min-height: 44px; }
+
+      /* 탭 — 모바일 터치 타깃 확보, 가로 스크롤. 모바일 헤더 65px에 정확 도킹.
+         거터는 모바일 컨테이너(14px)와 일치시켜 탭이 카드 그리드 좌측에 정렬 */
+      .tabs { top: 65px; padding: 0 max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left)); }
+      .tab { min-height: 44px; padding: 11px 12px; }
+      .overview-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+    }
+
+    /* ─── 짧은 높이(폰 가로모드) — sticky 헤더+탭바 뷰포트 예산 압축 ───
+       라운드3에서 보류했던 항목. 탭바(46px)가 추가되며 가로모드 합산이 121px=
+       뷰포트 31%까지 점유 → 헤더를 컴팩트화해 예산 회수. 폭과 무관(width>640
+       가로모드도 적용)하게 max-height로 타깃. */
+    @media (max-height: 480px) and (min-width: 641px) {
+      .header-inner { padding-top: 8px; padding-bottom: 8px; }
+      .header-title .subtitle { display: none; }
+      .header-logo { width: 28px; height: 28px; font-size: 14px; }
+      .header-title h1 { font-size: 16px; }
+      .tabs { top: 52px; }   /* 컴팩트 헤더(52px) 하단에 정확 도킹(겹침 0) */
+      .tab { padding-top: 10px; padding-bottom: 10px; }
     }
   </style>
 </head>
 <body>
+
+  <a href="#main-content" class="skip-link">본문으로 건너뛰기</a>
 
   <!-- ── 헤더 ───────────────────────────────────────────── -->
   <header>
@@ -548,7 +1170,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <div id="collect-status" class="collect-status" aria-live="polite"></div>
+        <div id="collect-status" class="collect-status" aria-live="polite" aria-atomic="true"></div>
         <button id="collect-btn" class="btn btn-primary" onclick="collect()">
           수집 실행
         </button>
@@ -556,44 +1178,94 @@
     </div>
   </header>
 
+  <!-- ── 탭 네비게이션 ──────────────────────────────────── -->
+  <nav class="tabs" aria-label="대시보드 뷰">
+    <div class="tablist" role="tablist" aria-label="대시보드 뷰 선택">
+      <button class="tab" role="tab" id="tab-overview"     aria-selected="true"  aria-controls="panel-overview"     tabindex="0">개요</button>
+      <button class="tab" role="tab" id="tab-important"    aria-selected="false" aria-controls="panel-important"    tabindex="-1">중요뉴스 <span class="tab-count" id="tabcount-important" aria-hidden="true"></span></button>
+      <button class="tab" role="tab" id="tab-all"          aria-selected="false" aria-controls="panel-all"          tabindex="-1">전체뉴스 <span class="tab-count" id="tabcount-all" aria-hidden="true"></span></button>
+      <button class="tab" role="tab" id="tab-by-category"  aria-selected="false" aria-controls="panel-by-category"  tabindex="-1">카테고리별</button>
+    </div>
+  </nav>
+
   <!-- ── 본문 ───────────────────────────────────────────── -->
-  <main>
+  <main id="main-content" tabindex="-1">
     <div class="container">
 
-      <!-- 설정 패널 -->
-      <div id="config" class="config-panel" role="region" aria-label="임계값 설정"></div>
-
       <!-- 전역 에러 배너 -->
-      <div id="global-error" style="display:none"></div>
+      <div id="global-error" role="alert" aria-live="assertive" style="display:none"></div>
 
-      <!-- 발송 대상 알림 섹션 -->
-      <section class="section" aria-labelledby="alerts-heading">
-        <div class="section-header">
+      <!-- ═══ 탭 1: 개요 ═══════════════════════════════════ -->
+      <section id="panel-overview" class="tabpanel" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
+
+        <!-- 수집은 헤더에 상시 노출되므로 여기선 발송 액션만(중복 제거) -->
+        <div class="overview-actions">
+          <button id="ov-send-btn" class="btn btn-primary" onclick="sendAlerts()">발송</button>
+          <span id="ov-action-status" class="oa-status" aria-live="polite" aria-atomic="true"></span>
+        </div>
+
+        <!-- 카테고리별 스탯 -->
+        <div id="overview-stats" class="stat-grid" aria-label="카테고리별 요약 통계"></div>
+
+        <!-- 오늘의 중요뉴스 -->
+        <h2 class="tab-section-title" id="overview-alerts-title">오늘의 중요뉴스</h2>
+        <p class="tab-section-desc" id="overview-alerts-desc">오늘 발행된 중요뉴스</p>
+        <div id="overview-alerts" class="card-grid" role="list"></div>
+
+        <div class="divider"></div>
+
+        <!-- 카테고리별 미니 섹션 + 발송 이력 요약 -->
+        <h2 class="tab-section-title">카테고리별 최신 뉴스</h2>
+        <p class="tab-section-desc">각 카테고리의 최신 항목과 중요뉴스 표식을 한눈에</p>
+        <div class="overview-grid">
+          <div id="overview-cats"></div>
           <div>
-            <h2 class="section-title" id="alerts-heading">
-              발송 대상 알림
-              <span id="alerts-count" class="section-badge alert-badge" aria-label="알림 수"></span>
-            </h2>
-            <p class="section-desc">임계값을 초과한 중요 뉴스 — 알림 발송 대상</p>
+            <h3 class="cat-mini-head cm-title" style="border:0;padding:0 0 12px 0;font-size:var(--fs-base);">최근 발송 이력</h3>
+            <div id="overview-history"></div>
           </div>
         </div>
-        <div id="alerts" class="card-grid" role="list"></div>
+
+        <div class="divider"></div>
+
+        <!-- 설정 패널 -->
+        <h2 class="tab-section-title">임계값 설정</h2>
+        <p class="tab-section-desc">카테고리별 중요도 임계값 — 초과 시 중요뉴스로 선정</p>
+        <div id="config" class="config-panel" role="region" aria-label="임계값 설정"></div>
       </section>
 
-      <div class="divider"></div>
-
-      <!-- 전체 수집 뉴스 섹션 -->
-      <section class="section" aria-labelledby="news-heading">
-        <div class="section-header">
-          <div>
-            <h2 class="section-title" id="news-heading">
-              전체 수집 뉴스
-              <span id="news-count" class="section-badge news-badge" aria-label="뉴스 수"></span>
-            </h2>
-            <p class="section-desc">수집된 전체 뉴스 — 카테고리·중요도(0–10) 포함</p>
-          </div>
+      <!-- ═══ 탭 2: 중요뉴스 ═══════════════════════════════ -->
+      <section id="panel-important" class="tabpanel" role="tabpanel" aria-labelledby="tab-important" tabindex="0" hidden>
+        <div class="overview-actions">
+          <h2 class="tab-section-title" style="margin:0">중요뉴스</h2>
+          <span id="imp-send-status" class="send-status" aria-live="polite" aria-atomic="true" style="margin-left:auto"></span>
+          <button id="imp-send-btn" class="btn btn-primary btn-sm" onclick="sendAlerts()">발송</button>
         </div>
+        <p class="tab-section-desc">임계값을 초과한 중요 뉴스를 카테고리별로 묶어 표시합니다.</p>
+        <div id="important-groups"></div>
+      </section>
+
+      <!-- ═══ 탭 3: 전체뉴스 ═══════════════════════════════ -->
+      <section id="panel-all" class="tabpanel" role="tabpanel" aria-labelledby="tab-all" tabindex="0" hidden>
+        <h2 class="tab-section-title">전체 수집 뉴스</h2>
+        <p class="tab-section-desc">수집된 전체 뉴스 — 중요도(0–10)·최신순 정렬</p>
         <div id="news" class="card-grid" role="list"></div>
+      </section>
+
+      <!-- ═══ 탭 4: 카테고리별 뉴스 ═══════════════════════ -->
+      <section id="panel-by-category" class="tabpanel" role="tabpanel" aria-labelledby="tab-by-category" tabindex="0" hidden>
+        <h2 class="tab-section-title">카테고리별 뉴스</h2>
+        <p class="tab-section-desc">카테고리를 선택해 오늘자 뉴스와 중요뉴스를 확인하세요</p>
+        <div id="cat-filter" class="cat-filter" role="group" aria-label="카테고리 필터"></div>
+        <button type="button" class="bc-subhead bc-toggle" id="bc-today-head"
+                aria-expanded="true" aria-controls="by-category-today" onclick="toggleBc('today')">
+          <span class="bc-chevron" aria-hidden="true">▾</span>오늘자 뉴스<span id="bc-today-count" class="bc-count"></span>
+        </button>
+        <div id="by-category-today" class="card-grid" role="list"></div>
+        <button type="button" class="bc-subhead bc-toggle" id="bc-important-head"
+                aria-expanded="true" aria-controls="by-category" onclick="toggleBc('important')">
+          <span class="bc-chevron" aria-hidden="true">▾</span>중요뉴스<span id="bc-important-count" class="bc-count"></span>
+        </button>
+        <div id="by-category" class="card-grid" role="list"></div>
       </section>
 
     </div>
@@ -604,19 +1276,22 @@
 const LABELS = {
   global_ai:           '글로벌 AI',
   global_finance_ai:   '글로벌 금융 AI',
-  domestic_finance_ai: '국내 금융 AI'
+  domestic_finance_ai: '국내 금융 AI',
+  woori:               '우리금융그룹'
 };
 
 const CAT_CLASS = {
   global_ai:           'cat-global-ai',
   global_finance_ai:   'cat-global-finance',
-  domestic_finance_ai: 'cat-domestic-finance'
+  domestic_finance_ai: 'cat-domestic-finance',
+  woori:               'cat-woori'
 };
 
 const CAT_DOT_COLOR = {
   global_ai:           'var(--c-global-ai)',
   global_finance_ai:   'var(--c-global-finance)',
-  domestic_finance_ai: 'var(--c-domestic-finance)'
+  domestic_finance_ai: 'var(--c-domestic-finance)',
+  woori:               'var(--c-woori)'
 };
 
 // ─── 헬퍼 ──────────────────────────────────────────────────
@@ -627,6 +1302,15 @@ function escapeHtml(s) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// 제목 주 언어 추정 — 한글 음절이 거의 없으면 영문으로 표기(WCAG 3.1.2)
+function detectLang(s) {
+  if (!s) return null;
+  const hangul = (s.match(/[가-힣]/g) || []).length;
+  const latin  = (s.match(/[A-Za-z]/g) || []).length;
+  if (latin >= 4 && hangul === 0) return 'en';
+  return null;
 }
 
 function scoreClass(score) {
@@ -685,16 +1369,79 @@ async function loadConfig() {
     const items = Object.keys(th).map(k => {
       const color = CAT_DOT_COLOR[k] || 'var(--text-dim)';
       const name  = LABELS[k] || escapeHtml(k);
-      return `<span class="threshold-item">
+      const val = escapeHtml(String(th[k]));
+      return `<span class="threshold-item" aria-label="${name} 임계값 ${val}점">
         <span class="threshold-dot" style="background:${color}" aria-hidden="true"></span>
-        <span class="threshold-name">${name}</span>
-        <span class="threshold-value">${escapeHtml(String(th[k]))}</span>
+        <span class="threshold-name" aria-hidden="true">${name}</span>
+        <span class="threshold-value" aria-hidden="true">${val}</span>
       </span>`;
     }).join('');
     el.innerHTML = `<span class="config-label">임계값</span>${items}`;
   } catch (e) {
     el.innerHTML = '<span class="config-label">임계값</span><span class="config-empty">설정을 불러올 수 없습니다.</span>';
   }
+}
+
+// 카테고리 순서 — 스키마 Category.ALL 과 동일
+const CAT_ORDER = ['global_ai', 'global_finance_ai', 'domestic_finance_ai', 'woori'];
+
+// ─── 공유 상태 ─────────────────────────────────────────────
+// 데이터를 한 번 로드해 4개 탭 뷰가 공유한다 (단일 진실 공급원).
+const STATE = {
+  news:    [],   // 전체 뉴스
+  alerts:  [],   // send_recommended=true
+  history: [],   // 발송 이력
+  loaded:  false,
+  errored: false,
+  byCatFilter: 'all',  // 카테고리별 탭의 현재 필터
+  bcCollapsed: { today: false, important: false }  // 카테고리별 탭 섹션 접힘 상태
+};
+
+// 최신순 정렬 헬퍼 (published_at desc, 동률이면 점수 desc)
+function byRecency(a, b) {
+  const ta = Date.parse(a.published_at || '') || 0;
+  const tb = Date.parse(b.published_at || '') || 0;
+  if (tb !== ta) return tb - ta;
+  return (b.importance_score || 0) - (a.importance_score || 0);
+}
+function byScore(a, b) {
+  const sa = (a.importance_score === null || a.importance_score === undefined) ? -1 : a.importance_score;
+  const sb = (b.importance_score === null || b.importance_score === undefined) ? -1 : b.importance_score;
+  if (sb !== sa) return sb - sa;
+  return byRecency(a, b);
+}
+// 발행일 기준 경과 일수(로컬 자정 기준). 파싱 불가면 null.
+function daysAgo(raw) {
+  const t = Date.parse(raw || '');
+  if (isNaN(t)) return null;
+  const d = new Date(t); d.setHours(0, 0, 0, 0);
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  return Math.round((now - d) / 86400000);
+}
+function relDay(raw) {
+  const n = daysAgo(raw);
+  if (n === null) return '';
+  if (n <= 0) return '오늘';
+  if (n === 1) return '어제';
+  return n + '일 전';
+}
+// 카테고리 계층: 우리금융그룹 ⊂ 국내 금융 AI. 부모 필터는 자식 항목도 포함한다.
+const CAT_CHILDREN = { domestic_finance_ai: ['woori'] };
+function matchesCategory(item, cat) {
+  if (item.category === cat) return true;
+  return (CAT_CHILDREN[cat] || []).includes(item.category);
+}
+// 최근 2일 내 뉴스는 점수 우선, 그 외는 최신 우선으로 정렬(중요한 최신뉴스를 위로).
+const FRESH_DAYS = 2;
+function isFresh(item) {
+  const d = daysAgo(item.published_at);
+  return d !== null && d <= FRESH_DAYS;
+}
+function byFreshThenScore(a, b) {
+  const fa = isFresh(a) ? 1 : 0, fb = isFresh(b) ? 1 : 0;
+  if (fa !== fb) return fb - fa;   // 최근 2일 항목을 맨 위로
+  if (fa) return byScore(a, b);    // 최근 2일 내: 점수 우선(동점 시 최신)
+  return byRecency(a, b);          // 그 외: 최신 우선
 }
 
 // ─── 카드 렌더 ─────────────────────────────────────────────
@@ -704,18 +1451,31 @@ function buildCard(it, isAlert) {
   const sCls      = scoreClass(scoreVal);
   const sLabel    = scoreLabel(scoreVal);
   const safeTitle = escapeHtml(it.title || '(제목 없음)');
+  const titleLang = detectLang(it.title || '');
   const safeReason= escapeHtml(it.importance_reason || '');
   const safeSrc   = escapeHtml(it.source || '');
   const safeDate  = formatDate(it.published_at);
   const safeUrl   = escapeHtml(it.url || '#');
 
   const alertBadge = isAlert
-    ? `<span class="alert-badge-card">발송 대상</span>`
+    ? `<span class="alert-badge-card">중요뉴스</span>`
     : '';
 
   const reasonHtml = safeReason
     ? `<div class="card-reason" aria-label="판단 근거">${safeReason}</div>`
     : '';
+
+  const safeId = escapeHtml(it.id || '');
+  const feedbackHtml = safeId ? `
+      <div class="card-feedback" role="group" aria-label="피드백">
+        <span class="fb-label">피드백</span>
+        <button type="button" class="fb-btn fb-good" data-id="${safeId}" data-kind="good"
+                onclick="sendFeedback(this)" aria-pressed="false" aria-label="정상">👍 정상</button>
+        <button type="button" class="fb-btn fb-fp" data-id="${safeId}" data-kind="false_positive"
+                onclick="sendFeedback(this)" aria-pressed="false" aria-label="오발송">👎 오발송</button>
+        <button type="button" class="fb-btn fb-fn" data-id="${safeId}" data-kind="false_negative"
+                onclick="sendFeedback(this)" aria-pressed="false" aria-label="누락">⚠️ 누락</button>
+      </div>` : '';
 
   return `
     <article class="card${isAlert ? ' card-alert' : ''}"
@@ -729,69 +1489,415 @@ function buildCard(it, isAlert) {
         </div>
       </div>
       <div class="card-title">
-        <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${safeTitle}</a>
+        <a href="${safeUrl}" target="_blank" rel="noopener noreferrer"${titleLang ? ` lang="${titleLang}"` : ''}
+           aria-label="${safeTitle} (새 탭에서 열림)">${safeTitle}</a>
       </div>
       ${reasonHtml}
       <div class="card-meta">
         <span class="source">${safeSrc}</span>
         ${safeDate ? `<span class="dot" aria-hidden="true">·</span><time datetime="${escapeHtml(it.published_at || '')}">${safeDate}</time>` : ''}
+        ${(it.duplicate_count > 0) ? `<span class="dot" aria-hidden="true">·</span><span class="dup-badge" title="같은 사건을 보도한 다른 기사 ${it.duplicate_count}건이 합쳐짐">+${it.duplicate_count} 중복</span>` : ''}
       </div>
+      ${feedbackHtml}
     </article>`;
 }
 
-// ─── 목록 렌더 ─────────────────────────────────────────────
-function render(elId, items, isAlert) {
+// ─── 스켈레톤 로딩 렌더 ────────────────────────────────────
+function renderSkeleton(elId, count) {
   const el = document.getElementById(elId);
-  const arr = Array.isArray(items) ? items : [];
+  if (!el) return;
+  const card = `
+    <div class="skeleton-card" aria-hidden="true">
+      <div class="sk-line sk-pill"></div>
+      <div class="sk-line sk-title"></div>
+      <div class="sk-line sk-title2"></div>
+      <div class="sk-line sk-reason"></div>
+      <div class="sk-line sk-meta"></div>
+    </div>`;
+  el.setAttribute('aria-busy', 'true');
+  el.innerHTML = card.repeat(count);
+}
 
-  if (arr.length === 0) {
+// ─── 개요: 카테고리 미니 아이템 렌더 ──────────────────────
+function buildMiniItem(it) {
+  const safeTitle = escapeHtml(it.title || '(제목 없음)');
+  const titleLang = detectLang(it.title || '');
+  const safeUrl   = escapeHtml(it.url || '#');
+  const scoreVal  = (it.importance_score !== undefined) ? it.importance_score : null;
+  const sCls      = scoreClass(scoreVal);
+  const sLabel    = scoreLabel(scoreVal);
+  const flag = it.send_recommended
+    ? `<span class="cmi-flag" aria-label="중요뉴스">● 중요</span>` : '';
+  return `<div class="cat-mini-item">
+      <span class="score-badge ${sCls} cmi-score" aria-label="중요도 ${sLabel}">${sLabel}</span>
+      <span class="cmi-title"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer"${titleLang ? ` lang="${titleLang}"` : ''}
+        aria-label="${safeTitle} (새 탭에서 열림)">${safeTitle}</a></span>
+      ${flag}
+    </div>`;
+}
+
+// ─── 개요 탭 렌더 ──────────────────────────────────────────
+function renderOverview() {
+  // 1) 카테고리별 스탯
+  const statEl = document.getElementById('overview-stats');
+  if (statEl) {
+    const total = STATE.news.length;
+    const alertTotal = STATE.alerts.length;
+    let html = `
+      <div class="stat-card stat-accent is-clickable" role="button" tabindex="0"
+           onclick="goToCategory('all')" onkeydown="statKey(event,'all')"
+           aria-label="전체 수집 ${total}건 — 전체 뉴스 보기">
+        <div class="stat-name">전체 수집</div>
+        <div class="stat-value">${total}</div>
+        <div class="stat-sub"><strong>${alertTotal}</strong>건 중요뉴스</div>
+      </div>`;
+    // 모니터링 대시보드 — 모든 카테고리를 항상 노출(조용한 카테고리는 0건으로 표시).
+    // "추적 안 됨"과 "추적했으나 조용함"을 구분해 한눈 파악·그리드 안정성 확보.
+    CAT_ORDER.forEach(cat => {
+      const inCat = STATE.news.filter(n => matchesCategory(n, cat));
+      const alertN = inCat.filter(n => n.send_recommended).length;
+      const color = CAT_DOT_COLOR[cat] || 'var(--text-dim)';
+      const isQuiet = inCat.length === 0;
+      html += `
+        <div class="stat-card is-clickable${isQuiet ? ' stat-quiet' : ''}" role="button" tabindex="0"
+             onclick="goToCategory('${cat}')" onkeydown="statKey(event,'${cat}')"
+             aria-label="${escapeHtml(LABELS[cat] || cat)} ${inCat.length}건 — 이 카테고리 뉴스 보기">
+          <div class="stat-top">
+            <span class="stat-dot" style="background:${color}" aria-hidden="true"></span>
+            <span class="stat-name">${escapeHtml(LABELS[cat] || cat)}</span>
+          </div>
+          <div class="stat-value">${inCat.length}</div>
+          <div class="stat-sub">${alertN > 0 ? `<strong>${alertN}</strong>건 중요뉴스` : (isQuiet ? '수집 없음' : '중요뉴스 없음')}</div>
+        </div>`;
+    });
+    statEl.innerHTML = html;
+  }
+
+  // 2) 오늘의 중요뉴스 — 오늘 발행분 우선, 없으면 '최근 중요뉴스'로 정직하게 표기
+  const recentAlerts = STATE.alerts.slice().sort(byRecency);
+  const todays = recentAlerts.filter(a => { const d = daysAgo(a.published_at); return d !== null && d <= 0; });
+  const titleEl = document.getElementById('overview-alerts-title');
+  const descEl  = document.getElementById('overview-alerts-desc');
+  let highlight;
+  if (todays.length) {
+    highlight = todays.slice(0, 4);
+    if (titleEl) titleEl.textContent = '오늘의 중요뉴스';
+    if (descEl)  descEl.textContent = '오늘 발행된 중요뉴스';
+  } else {
+    highlight = recentAlerts.slice(0, 4);
+    if (titleEl) titleEl.textContent = '최근 중요뉴스';
+    if (descEl)  descEl.textContent = highlight.length
+      ? `오늘 새 중요뉴스는 없습니다 · 가장 최근 ${relDay(highlight[0].published_at)}`
+      : '최근 중요뉴스가 없습니다';
+  }
+  renderInto('overview-alerts', highlight, true);
+  // 하이라이트에 이미 나온 항목은 아래 미니섹션에서 제외(첫화면 중복 표시 방지)
+  const highlightIds = new Set(highlight.map(it => it.id));
+
+  // 3) 카테고리별 미니 섹션
+  const catsEl = document.getElementById('overview-cats');
+  if (catsEl) {
+    let html = '';
+    CAT_ORDER.forEach(cat => {
+      const inCat = STATE.news.filter(n => n.category === cat && !highlightIds.has(n.id)).sort(byRecency);
+      if (inCat.length === 0) return;
+      const color = CAT_DOT_COLOR[cat] || 'var(--text-dim)';
+      const alertN = inCat.filter(n => n.send_recommended).length;
+      const top = inCat.slice(0, 3);
+      html += `
+        <div class="cat-mini">
+          <div class="cat-mini-head" style="border-left-color:${color}">
+            <span class="cm-title">${escapeHtml(LABELS[cat] || cat)}</span>
+            <span class="cm-counts">
+              <span>${inCat.length}건</span>
+              ${alertN > 0 ? `<span class="cm-alert">${alertN} 중요</span>` : ''}
+            </span>
+          </div>
+          <div class="cat-mini-list">${top.map(buildMiniItem).join('')}</div>
+        </div>`;
+    });
+    catsEl.innerHTML = html || `<div class="cat-mini"><div class="cat-mini-empty">수집된 뉴스가 없습니다.</div></div>`;
+  }
+
+  // 4) 발송 이력 요약 (소형 — 최근 5건)
+  renderHistoryInto('overview-history', STATE.history.slice(0, 5));
+}
+
+// ─── 중요뉴스 탭 렌더 (카테고리별 그룹) ───────────────────
+function renderImportant() {
+  const el = document.getElementById('important-groups');
+  if (!el) return;
+  el.removeAttribute('aria-busy');
+  if (STATE.alerts.length === 0) {
     el.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon" aria-hidden="true">${isAlert ? '🔔' : '📋'}</div>
-        <p>${isAlert ? '현재 발송 대상 알림이 없습니다.' : '수집된 뉴스가 없습니다.'}</p>
-        <p class="empty-hint">수집 실행 버튼을 눌러 뉴스를 가져오세요.</p>
+        <div class="empty-icon" aria-hidden="true">🔔</div>
+        <p>현재 중요뉴스가 없습니다.</p>
+        <p class="empty-hint">수집 실행 후 임계값을 초과한 뉴스가 여기에 모입니다.</p>
       </div>`;
     return;
   }
+  let html = '';
+  CAT_ORDER.forEach(cat => {
+    const inCat = STATE.alerts.filter(a => a.category === cat).sort(byFreshThenScore);
+    if (inCat.length === 0) return;
+    const color = CAT_DOT_COLOR[cat] || 'var(--text-dim)';
+    html += `
+      <div class="cat-group">
+        <div class="cat-group-head">
+          <span class="cg-dot" style="background:${color}" aria-hidden="true"></span>
+          <span class="cg-title">${escapeHtml(LABELS[cat] || cat)}</span>
+          <span class="cg-count">${inCat.length}건</span>
+        </div>
+        <div class="card-grid" role="list">${inCat.map(it => buildCard(it, true)).join('')}</div>
+      </div>`;
+  });
+  el.innerHTML = html;
+}
 
-  el.innerHTML = arr.map(it => buildCard(it, isAlert)).join('');
+// ─── 카테고리별 탭: 필터 칩 + 피드 ───────────────────────
+function renderCatFilter() {
+  const el = document.getElementById('cat-filter');
+  if (!el) return;
+  const cur = STATE.byCatFilter;
+  let html = `<button type="button" class="cat-chip" data-cat="all" aria-pressed="${cur === 'all'}" onclick="selectCategory('all')">전체</button>`;
+  CAT_ORDER.forEach(cat => {
+    const color = CAT_DOT_COLOR[cat] || 'var(--text-dim)';
+    const n = STATE.news.filter(x => matchesCategory(x, cat)).length;
+    // 활성 칩은 카테고리 색을 보더에 반영(선택 상태를 의미적으로 명확화)
+    html += `<button type="button" class="cat-chip" data-cat="${cat}" aria-pressed="${cur === cat}" onclick="selectCategory('${cat}')" style="--chip-c:${color}">
+      <span class="chip-dot" style="background:${color}" aria-hidden="true"></span>${escapeHtml(LABELS[cat] || cat)} <span class="chip-n">${n}</span></button>`;
+  });
+  el.innerHTML = html;
+}
 
-  // 카운트 배지
-  const countId = isAlert ? 'alerts-count' : 'news-count';
-  const countEl = document.getElementById(countId);
-  if (countEl) {
-    countEl.textContent = arr.length;
-    countEl.style.display = arr.length > 0 ? '' : 'none';
+function selectCategory(cat) {
+  STATE.byCatFilter = cat;
+  renderCatFilter();
+  renderByCategory();
+}
+
+// 개요 스탯 카드 클릭 → 카테고리별 탭으로 이동해 해당 카테고리만 표시
+function goToCategory(cat) {
+  selectCategory(cat);
+  activateTab('by-category', { focus: false, push: true });
+}
+function statKey(e, cat) {
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+    goToCategory(cat);
   }
+}
+
+function renderByCategory() {
+  const filter = STATE.byCatFilter;
+  const items = (filter === 'all'
+    ? STATE.news
+    : STATE.news.filter(n => matchesCategory(n, filter))).slice();
+  // 오늘자 뉴스 / 중요뉴스 두 섹션으로 나눈다(겹칠 수 있음 — 서로 다른 관점).
+  const today = items.filter(n => { const d = daysAgo(n.published_at); return d !== null && d <= 0; })
+                     .sort(byScore);
+  const important = items.filter(n => n.send_recommended).sort(byFreshThenScore);
+
+  // 오늘자 섹션 (없으면 헤더 숨김)
+  const todayHead = document.getElementById('bc-today-head');
+  if (todayHead) todayHead.style.display = today.length ? '' : 'none';
+  const tCnt = document.getElementById('bc-today-count');
+  if (tCnt) tCnt.textContent = today.length ? `${today.length}건` : '';
+  document.getElementById('by-category-today').innerHTML = '';
+  if (today.length) renderInto('by-category-today', today, false);
+
+  // 중요뉴스 섹션
+  const iCnt = document.getElementById('bc-important-count');
+  if (iCnt) iCnt.textContent = important.length ? `${important.length}건` : '';
+  const emptyOpts = {
+    title: `${filter === 'all' ? '' : (LABELS[filter] || filter) + ' '}중요뉴스가 없습니다.`,
+    hint: '임계값을 초과한 뉴스가 여기에 모입니다.' };
+  renderInto('by-category', important, true, emptyOpts);
+
+  applyBcCollapse('today');
+  applyBcCollapse('important');
+}
+
+// 카테고리별 탭 섹션 접기/펼치기 (today | important)
+const _BC_GRID = { today: 'by-category-today', important: 'by-category' };
+const _BC_HEAD = { today: 'bc-today-head', important: 'bc-important-head' };
+function applyBcCollapse(key) {
+  const head = document.getElementById(_BC_HEAD[key]);
+  const grid = document.getElementById(_BC_GRID[key]);
+  if (!head || !grid) return;
+  const collapsed = !!STATE.bcCollapsed[key];
+  head.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  grid.style.display = collapsed ? 'none' : '';
+}
+function toggleBc(key) {
+  STATE.bcCollapsed[key] = !STATE.bcCollapsed[key];
+  applyBcCollapse(key);
+}
+
+// ─── 전체뉴스 탭 ───────────────────────────────────────────
+function renderAllNews() {
+  renderInto('news', STATE.news.slice().sort(byFreshThenScore), false);
+}
+
+// 공통: 카드 그리드에 렌더 (빈 상태/카운트 처리)
+// emptyOpts: { title, hint } — 맥락별 빈 상태 메시지(미지정 시 기본 no-data/에러 카피)
+function renderInto(elId, items, isAlert, emptyOpts) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const arr = Array.isArray(items) ? items : [];
+  el.removeAttribute('aria-busy');
+  if (arr.length === 0) {
+    const title = emptyOpts ? emptyOpts.title
+      : (isAlert ? '표시할 중요뉴스가 없습니다.' : '수집된 뉴스가 없습니다.');
+    const hint = emptyOpts ? emptyOpts.hint
+      : (STATE.errored ? '데이터를 불러오지 못했습니다. 잠시 후 다시 시도하세요.'
+                       : '수집 실행 버튼을 눌러 뉴스를 가져오세요.');
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon" aria-hidden="true">${isAlert ? '🔔' : '📋'}</div>
+        <p>${escapeHtml(title)}</p>
+        <p class="empty-hint">${escapeHtml(hint)}</p>
+      </div>`;
+    return;
+  }
+  el.innerHTML = arr.map(it => buildCard(it, isAlert)).join('');
+}
+
+// 공통: 발송 이력을 임의 컨테이너에 렌더
+function renderHistoryInto(elId, items) {
+  const el  = document.getElementById(elId);
+  if (!el) return;
+  const arr = Array.isArray(items) ? items : [];
+  el.removeAttribute('aria-busy');
+  if (arr.length === 0) {
+    el.innerHTML = `<div class="history-list"><div class="history-empty">아직 발송된 알림이 없습니다.</div></div>`;
+    return;
+  }
+  const rows = arr.map(h => {
+    const sentRaw = escapeHtml(h.sent_at || '');
+    const timeHtml = h.sent_at
+      ? `<time class="h-time" datetime="${sentRaw}">${formatDate(h.sent_at)}</time>`
+      : `<span class="h-time">—</span>`;
+    return `<div class="history-row" role="listitem">
+        ${timeHtml}
+        <span class="h-title" title="${escapeHtml(h.title || '')}">${catPill(h.category)} ${escapeHtml(h.title || '(제목 없음)')}</span>
+        <span class="h-channel">${escapeHtml(h.channel || '')}</span>
+      </div>`;
+  }).join('');
+  el.innerHTML = `<div class="history-list" role="list">${rows}</div>`;
+}
+
+// ─── 탭 카운트 배지 갱신 ───────────────────────────────────
+function updateTabCounts() {
+  const ic = document.getElementById('tabcount-important');
+  const ac = document.getElementById('tabcount-all');
+  if (ic) ic.textContent = String(STATE.alerts.length);
+  if (ac) ac.textContent = String(STATE.news.length);
+}
+
+// ─── 전체 뷰 재렌더 (현재 활성 탭 기준 전부 갱신) ─────────
+function renderAll() {
+  updateTabCounts();
+  renderOverview();
+  renderImportant();
+  renderAllNews();
+  renderCatFilter();
+  renderByCategory();
 }
 
 // ─── 데이터 로드 ───────────────────────────────────────────
 async function load() {
   clearGlobalError();
+  if (!STATE.loaded) {
+    renderSkeleton('overview-alerts', 2);
+    renderSkeleton('news', 4);
+  }
   try {
-    const [aRes, nRes] = await Promise.all([
+    const [aRes, nRes, hRes] = await Promise.all([
       fetch('/api/alerts'),
-      fetch('/api/news')
+      fetch('/api/news'),
+      fetch('/api/history')
     ]);
     if (!aRes.ok || !nRes.ok) throw new Error(`서버 응답 오류 (alerts:${aRes.status} / news:${nRes.status})`);
     const [a, n] = await Promise.all([aRes.json(), nRes.json()]);
-    render('alerts', a.items, true);
-    render('news',   n.items, false);
+    STATE.alerts  = Array.isArray(a.items) ? a.items : [];
+    STATE.news    = Array.isArray(n.items) ? n.items : [];
+    STATE.history = hRes.ok ? (await hRes.json()).items || [] : [];
+    STATE.errored = false;
   } catch (e) {
     showGlobalError('뉴스 데이터를 불러오는 중 오류가 발생했습니다. (' + e.message + ')');
-    render('alerts', [], true);
-    render('news',   [], false);
+    STATE.alerts = []; STATE.news = []; STATE.history = [];
+    STATE.errored = true;
+  }
+  STATE.loaded = true;
+  renderAll();
+}
+
+// ─── 상태/버튼 멀티 타깃 헬퍼 ─────────────────────────────
+// 같은 액션이 여러 탭에 노출되므로 모든 표면을 동기화한다.
+function setStatusAll(ids, html) {
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = html; });
+}
+function setDisabledAll(ids, disabled) {
+  ids.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = disabled; });
+}
+
+const SEND_BTNS    = ['ov-send-btn', 'imp-send-btn'];
+const SEND_STATUS  = ['ov-action-status', 'imp-send-status'];
+// 수집은 헤더 단일 버튼(개요 중복 제거). 상태도 헤더 + 개요 상태줄에 함께 표기.
+const COLLECT_BTNS = ['collect-btn'];
+const COLLECT_STAT = ['collect-status', 'ov-action-status'];
+
+// ─── 알림 발송 ─────────────────────────────────────────────
+async function sendAlerts() {
+  setDisabledAll(SEND_BTNS, true);
+  setStatusAll(SEND_STATUS, '<span class="spinner" aria-hidden="true"></span><span> 발송 중...</span>');
+  try {
+    const res = await fetch('/api/send', { method: 'POST' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const r = await res.json();
+    const sent = (r && r.sent) || 0;
+    const msg = sent > 0 ? `${sent}건 발송 완료` : '발송할 신규 알림이 없습니다';
+    setStatusAll(SEND_STATUS, `<span class="status-ok" aria-hidden="true">✓</span><span> ${escapeHtml(msg)}</span>`);
+    await load();
+  } catch (e) {
+    setStatusAll(SEND_STATUS, `<span class="status-err" aria-hidden="true">✗</span><span> 발송 실패: ${escapeHtml(e.message)}</span>`);
+  } finally {
+    setDisabledAll(SEND_BTNS, false);
+    setTimeout(() => { setStatusAll(SEND_STATUS, ''); }, 3500);
+  }
+}
+
+// ─── 피드백 전송 ───────────────────────────────────────────
+async function sendFeedback(btn) {
+  const newsId = btn.getAttribute('data-id');
+  const kind   = btn.getAttribute('data-kind');
+  if (!newsId || !kind) return;
+  const group = btn.closest('.card-feedback');
+  const siblings = group ? group.querySelectorAll('.fb-btn') : [btn];
+  siblings.forEach(b => { b.disabled = true; });
+  try {
+    const res = await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ news_id: newsId, kind: kind })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    siblings.forEach(b => { b.classList.remove('is-active'); b.setAttribute('aria-pressed', 'false'); });
+    btn.classList.add('is-active');
+    btn.setAttribute('aria-pressed', 'true');
+  } catch (e) {
+    showGlobalError('피드백 전송에 실패했습니다. (' + e.message + ')');
+  } finally {
+    siblings.forEach(b => { b.disabled = false; });
   }
 }
 
 // ─── 수집 실행 ─────────────────────────────────────────────
 async function collect() {
-  const btn    = document.getElementById('collect-btn');
-  const status = document.getElementById('collect-status');
-
-  btn.disabled = true;
-  status.innerHTML = '<span class="spinner" aria-hidden="true"></span><span>수집 중...</span>';
-
+  setDisabledAll(COLLECT_BTNS, true);
+  setStatusAll(COLLECT_STAT, '<span class="spinner" aria-hidden="true"></span><span>수집 중...</span>');
   try {
     const res = await fetch('/api/collect', { method: 'POST' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -799,18 +1905,119 @@ async function collect() {
     const msg = (r && r.collected !== undefined)
       ? `${r.collected}건 수집 완료`
       : '수집 완료';
-    status.innerHTML = `<span class="status-ok">✓</span><span>${msg}</span>`;
+    setStatusAll(COLLECT_STAT, `<span class="status-ok" aria-hidden="true">✓</span><span>${msg}</span>`);
     await load();
   } catch (e) {
-    status.innerHTML = `<span class="status-err">✗</span><span>수집 실패: ${escapeHtml(e.message)}</span>`;
+    setStatusAll(COLLECT_STAT, `<span class="status-err" aria-hidden="true">✗</span><span>수집 실패: ${escapeHtml(e.message)}</span>`);
   } finally {
-    btn.disabled = false;
-    // 3초 후 상태 메시지 제거
-    setTimeout(() => { status.innerHTML = ''; }, 3000);
+    setDisabledAll(COLLECT_BTNS, false);
+    setTimeout(() => { setStatusAll(COLLECT_STAT, ''); }, 3000);
   }
 }
 
+// ─── 탭 라우팅 (ARIA tablist + 화살표키 + URL 해시) ───────
+const TABS = ['overview', 'important', 'all', 'by-category'];
+
+function tabBtn(name)   { return document.getElementById('tab-' + name); }
+function tabPanel(name) { return document.getElementById('panel-' + name); }
+
+function activateTab(name, { focus = false, push = true } = {}) {
+  if (!TABS.includes(name)) name = 'overview';
+  TABS.forEach(t => {
+    const btn = tabBtn(t), panel = tabPanel(t);
+    const sel = (t === name);
+    if (btn) {
+      btn.setAttribute('aria-selected', sel ? 'true' : 'false');
+      btn.tabIndex = sel ? 0 : -1;
+    }
+    if (panel) { panel.hidden = !sel; }
+  });
+  if (focus) { const b = tabBtn(name); if (b) b.focus(); }
+  if (push && location.hash.slice(1) !== name) {
+    history.replaceState(null, '', '#' + name);
+  }
+  // 좁은 폭(모바일)에서 탭바가 가로 스크롤될 때 — 선택 탭을 tablist 안으로 가시화.
+  // 마지막 탭("카테고리별")이 클리핑돼 활성 언더라인이 가려지는 문제 방지.
+  // scrollLeft만 조정(세로 페이지 스크롤·포커스 점프 없음).
+  const list = document.querySelector('.tablist');
+  const selBtn = tabBtn(name);
+  if (list && selBtn && list.scrollWidth > list.clientWidth) {
+    const lr = list.getBoundingClientRect();
+    const br = selBtn.getBoundingClientRect();
+    const pad = 16; // 끝 여백 — 인접 탭 일부가 보여 스크롤 가능성 암시
+    if (br.right > lr.right) list.scrollLeft += (br.right - lr.right) + pad;
+    else if (br.left < lr.left) list.scrollLeft -= (lr.left - br.left) + pad;
+  }
+  // 탭 전환 시 스크롤이 탭바 아래로 내려가 있으면 새 패널 상단으로 복귀
+  // (다른 탭에서 깊이 스크롤 후 전환 시 콘텐츠 중간에 떨어지는 문제 방지).
+  // sticky 바(헤더+탭바) 높이만큼 위로 정렬 — 패널 제목이 탭바 바로 아래 보이도록.
+  const tabsEl = document.querySelector('.tabs');
+  const panel = tabPanel(name);
+  if (tabsEl && panel) {
+    const stick = Math.round(tabsEl.getBoundingClientRect().bottom);
+    // 탭바가 화면 상단에 고정된 상태(=콘텐츠를 스크롤해 내려온 상태)에서만 보정
+    if (window.scrollY > stick) {
+      // 새 패널 상단이 탭바 바로 아래(8px 여백) 오도록 스크롤
+      const target = window.scrollY + panel.getBoundingClientRect().top - stick - 8;
+      window.scrollTo({ top: Math.max(0, target), behavior: 'auto' });
+    }
+  }
+  updateTabScrollAffordance();
+}
+
+// 탭바 가로 스크롤 어포던스 — 스크롤 위치에 따라 좌/우 끝 페이드 토글.
+// 스크롤바가 숨겨져 있어(scrollbar-width:none) "더 있음"을 시각적으로 암시.
+function updateTabScrollAffordance() {
+  const list = document.querySelector('.tablist');
+  const tabs = document.querySelector('.tabs');
+  if (!list || !tabs) return;
+  const overflow = list.scrollWidth - list.clientWidth;
+  if (overflow <= 1) {            // 오버플로 없음(데스크톱) — 페이드 끔
+    tabs.classList.remove('scroll-start', 'scroll-end');
+    return;
+  }
+  const sl = list.scrollLeft;
+  tabs.classList.toggle('scroll-start', sl > 1);            // 좌측에 가려진 탭 있음
+  tabs.classList.toggle('scroll-end',   sl < overflow - 1); // 우측에 가려진 탭 있음
+}
+
+function initTabs() {
+  const list = document.querySelector('.tablist');
+  if (!list) return;
+  // 가로 스크롤·리사이즈 시 끝 페이드 어포던스 갱신
+  list.addEventListener('scroll', updateTabScrollAffordance, { passive: true });
+  window.addEventListener('resize', updateTabScrollAffordance, { passive: true });
+  list.addEventListener('click', e => {
+    const btn = e.target.closest('[role="tab"]');
+    if (!btn) return;
+    activateTab(btn.id.replace('tab-', ''));
+  });
+  list.addEventListener('keydown', e => {
+    const cur = TABS.indexOf(document.activeElement.id.replace('tab-', ''));
+    if (cur < 0) return;
+    let next = null;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (cur + 1) % TABS.length;
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (cur - 1 + TABS.length) % TABS.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = TABS.length - 1;
+    if (next !== null) {
+      e.preventDefault();
+      activateTab(TABS[next], { focus: true });
+    }
+  });
+  // 해시 딥링크 / 뒤로가기 지원
+  window.addEventListener('hashchange', () => {
+    const name = location.hash.slice(1);
+    if (TABS.includes(name)) activateTab(name, { push: false });
+  });
+  const initial = location.hash.slice(1);
+  activateTab(TABS.includes(initial) ? initial : 'overview', { push: false });
+}
+
 // ─── 초기화 ────────────────────────────────────────────────
+initTabs();
+renderSkeleton('overview-alerts', 2);
+renderSkeleton('news', 4);
 loadConfig();
 load();
 </script>
