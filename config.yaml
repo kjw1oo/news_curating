@@ -1,16 +1,182 @@
 thresholds:
-  global_ai: 8.5
-  global_finance_ai: 7.0
-  domestic_finance_ai: 4.0
+  # 글로벌은 빈도 최소화를 위해 아주 빡세게 — 진짜 판도 전환급만 통과.
+  global_ai: 9.5
+  global_finance_ai: 9.0
+  domestic_finance_ai: 6.5
+  # 우리금융그룹 전용 트랙 — 국내보다 약간 낮게(전용 관심).
+  woori: 5.5
 monthly_cap:
   global_finance_ai: 1
 collect_interval_hours: 6
 dedup_window_hours: 24
+# 최신성 보호: 이보다 오래된 피드 항목은 수집 제외(아카이브 덤프 노이즈 차단).
+# 일부 피드(예: DeepMind 블로그)가 신규 항목이 드물 때 1년치 아카이브를 반환하는
+# 현상을 막는다. when:30d 쿼리·블로그 최신 항목을 안전히 포함하도록 여유 있게 45일.
+max_feed_age_days: 45
+# 대시보드 기본 표시 창(일). 이보다 오래된 뉴스는 기본적으로 숨긴다(API ?days=N로 덮어씀, 0=전체).
+display_window_days: 7
 batch_window_minutes: 90
 keyword_filters: [AI, 인공지능, LLM, 머신러닝, 데이터, 디지털, 마이데이터]
+# 우리금융 우선 적용: 이 엔티티를 가리키는 '국내 금융 AI' 기사는 'woori'로 우선 분류.
+woori_entities: [우리금융, 우리금융지주, 우리금융그룹, 우리은행, 우리카드, 우리종합금융, 우리투자증권]
 retry_max: 3
+# 활성 알림 채널 — 새 채널 추가 = Notifier 구현 1개 + 이 목록에 이름 등록.
+notifiers: [console]
+# 이메일(SMTP) 자격증명은 여기 또는 환경변수(SMTP_*)로. 비우면 graceful skip.
+notifier_settings:
+  email:
+    host:
+    port: 587
+    username:
+    password:
+    from_addr:
+    to_addrs: []
 sources:
+  # === 국내 금융지주: 토스 종목 뉴스피드 (type=toss, build_toss_collectors가 인스턴스화) ===
+  # 상장 금융지주는 토스 종목 뉴스로 수집. 우리금융(A316140)만 woori, 나머지는 국내 금융 AI.
   woori:
+    type: toss
     name: 우리금융지주
     toss_stock: A316140
+    category: woori
+  shinhan:
+    type: toss
+    name: 신한지주
+    toss_stock: A055550
     category: domestic_finance_ai
+  kb_financial:
+    type: toss
+    name: KB금융
+    toss_stock: A105560
+    category: domestic_finance_ai
+  hana_financial:
+    type: toss
+    name: 하나금융지주
+    toss_stock: A086790
+    category: domestic_finance_ai
+  ibk:
+    type: toss
+    name: 기업은행
+    toss_stock: A024110
+    category: domestic_finance_ai
+  kakaobank:
+    type: toss
+    name: 카카오뱅크
+    toss_stock: A323410
+    category: domestic_finance_ai
+  jb_financial:
+    type: toss
+    name: JB금융지주
+    toss_stock: A175330
+    category: domestic_finance_ai
+  bnk_financial:
+    type: toss
+    name: BNK금융지주
+    toss_stock: A138930
+    category: domestic_finance_ai
+  dgb_financial:
+    type: toss
+    name: DGB금융지주
+    toss_stock: A139130
+    category: domestic_finance_ai
+  # 우리금융 보조 RSS (전용 트랙 추가 커버 — 토스 외 웹 기사).
+  googlenews_woori:
+    type: rss
+    name: GoogleNews 우리금융
+    category: woori
+    url: "https://news.google.com/rss/search?q=%EC%9A%B0%EB%A6%AC%EA%B8%88%EC%9C%B5%20AI&hl=ko&gl=KR&ceid=KR:ko"
+  # === 비상장(토스 종목 없음) 대체: 매경 경제 RSS ===
+  # 농협(NH농협금융지주, 비상장) 등 토스에 없는 금융사를 매경 RSS로 커버.
+  # 경제 전반 피드라 키워드 필터(AI/데이터/디지털)가 AI 관련만 통과시킨다.
+  mk_economy:
+    type: rss
+    name: 매일경제 경제
+    category: domestic_finance_ai
+    url: "https://www.mk.co.kr/rss/30100041/"
+  # --- RSS 피드 (source-researcher 실측 채택: _workspace/00b_source_research.md) ---
+  # type=rss 항목은 build_rss_collectors(config)가 RSSCollector로 인스턴스화한다.
+  # global_ai (주력+고품질)
+  googlenews_ai:
+    type: rss
+    name: GoogleNews AI
+    category: global_ai
+    url: "https://news.google.com/rss/search?q=(OpenAI+OR+Anthropic+OR+%22Google+DeepMind%22+OR+%22AI+model%22)+when:7d&hl=en-US&gl=US&ceid=US:en"
+  mit_tech_review_ai:
+    type: rss
+    name: MIT Technology Review AI
+    category: global_ai
+    url: "https://www.technologyreview.com/topic/artificial-intelligence/feed"
+  techcrunch_ai:
+    type: rss
+    name: TechCrunch AI
+    category: global_ai
+    url: "https://techcrunch.com/category/artificial-intelligence/feed/"
+  arstechnica_ai:
+    type: rss
+    name: Ars Technica AI
+    category: global_ai
+    url: "https://arstechnica.com/ai/feed/"
+  google_ai_blog:
+    type: rss
+    name: Google AI Blog
+    category: global_ai
+    url: "https://blog.google/technology/ai/rss/"
+  # global_ai (보조)
+  deepmind_blog:
+    type: rss
+    name: Google DeepMind Blog
+    category: global_ai
+    url: "https://deepmind.google/blog/rss.xml"
+  marktechpost:
+    type: rss
+    name: MarkTechPost
+    category: global_ai
+    url: "https://www.marktechpost.com/feed/"
+  wired_ai:
+    type: rss
+    name: Wired AI
+    category: global_ai
+    url: "https://www.wired.com/feed/tag/ai/latest/rss"
+  # global_finance_ai (주력: GoogleNews 검색 쿼리 RSS)
+  googlenews_ai_finance:
+    type: rss
+    name: GoogleNews AI Finance
+    category: global_finance_ai
+    url: "https://news.google.com/rss/search?q=AI+finance+OR+fintech+OR+bank&hl=en-US&gl=US&ceid=US:en"
+  googlenews_wallstreet_ai:
+    type: rss
+    name: GoogleNews Wall Street AI
+    category: global_finance_ai
+    url: "https://news.google.com/rss/search?q=(%22Wall+Street%22+OR+%22JPMorgan%22+OR+%22Goldman%22+OR+%22hedge+fund%22)+AI+when:30d&hl=en-US&gl=US&ceid=US:en"
+  googlenews_ai_banking:
+    type: rss
+    name: GoogleNews AI Banking/Trading
+    category: global_finance_ai
+    url: "https://news.google.com/rss/search?q=%22artificial+intelligence%22+(bank+OR+%22hedge+fund%22+OR+trading+OR+fintech)+when:30d&hl=en-US&gl=US&ceid=US:en"
+  # global_finance_ai (보조: 핀테크 1차, AI 필터 필수)
+  finextra_headlines:
+    type: rss
+    name: Finextra Headlines
+    category: global_finance_ai
+    url: "https://www.finextra.com/rss/headlines.aspx"
+# 신뢰 출처 화이트리스트 (dedup·신뢰도 가중용 — 00b §4)
+source_whitelist:
+  global_ai:
+    - openai.com
+    - blog.google
+    - deepmind.google
+    - anthropic.com
+    - technologyreview.com
+    - arstechnica.com
+    - techcrunch.com
+    - wired.com
+  global_finance_ai:
+    - reuters.com
+    - bloomberg.com
+    - ft.com
+    - wsj.com
+    - cnbc.com
+    - finextra.com
+    - americanbanker.com
+    - jpmorgan.com
+    - goldmansachs.com

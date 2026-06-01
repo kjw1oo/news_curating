@@ -1,0 +1,41 @@
+{
+  "result": {
+    "pagingParam": {"size": 30, "orderBy": "latest"},
+    "lastPage": false,
+    "body": [
+      {
+        "id": "edaily_2026060106300000199",
+        "title": "우리금융, 생성형 AI 플랫폼 전 계열사 확대",
+        "summary": "우리금융지주가 생성형 AI 기반 업무 플랫폼을 전 계열사로 확대 적용한다.",
+        "contentText": "우리금융지주가 생성형 AI 기반 업무 플랫폼을 전 계열사로...",
+        "imageUrls": ["https://image.example.com/a.jpg"],
+        "source": {"code": "edaily", "name": "이데일리"},
+        "createdAt": "2026-06-01T06:30:00",
+        "updatedAt": "2026-06-01T06:31:00"
+      },
+      {
+        "id": "mt_2026053110000000042",
+        "title": "우리은행 마이데이터 신규 서비스 출시",
+        "summary": "우리은행이 마이데이터 기반 자산관리 서비스를 출시했다.",
+        "contentText": "",
+        "imageUrls": [],
+        "source": {"code": "mt", "name": "머니투데이"},
+        "createdAt": "2026-05-31T10:00:00+09:00",
+        "updatedAt": "2026-05-31T10:00:00+09:00"
+      },
+      {
+        "id": "",
+        "title": "id 없는 항목 — 스킵되어야 함",
+        "source": {"name": "테스트"},
+        "createdAt": "2026-05-30T09:00:00"
+      },
+      {
+        "id": "noname_2026053000000000001",
+        "title": "출처명 없는 항목 — source_name 폴백",
+        "summary": "요약",
+        "source": {},
+        "createdAt": "2026-05-30T08:00:00"
+      }
+    ]
+  }
+}

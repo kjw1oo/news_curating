@@ -56,6 +56,24 @@ def test_pipeline_stores_below_threshold_item_as_not_recommended(tmp_path):
     assert result["recommended"] == 0
 
 
+def test_recollect_preserves_existing_score_and_sent(tmp_path):
+    st = Storage(tmp_path / "p.db")
+    cfg = {"keyword_filters": ["AI"], "thresholds": {Category.DOMESTIC_FINANCE_AI: 4.0}}
+    scored_caller = lambda item: '{"score": 6.0, "reason": "의미", "send": true}'
+    # 1차: 채점되어 저장
+    run_pipeline(collectors=[lambda: [_raw("https://t/1", "우리금융 AI 발표")]],
+                 storage=st, config=cfg, caller=scored_caller)
+    st.record_send(st.query(), channel="console", batch_id="b1")  # 발송 기록 → sent=1
+    # 2차: 키 없는 수집을 모사(미채점) — 같은 url 재수집
+    null_caller = lambda item: "잘못된 응답"   # 채점 실패 → score None
+    run_pipeline(collectors=[lambda: [_raw("https://t/1", "우리금융 AI 발표")]],
+                 storage=st, config=cfg, caller=null_caller)
+    row = st.query()[0]
+    assert row.importance_score == 6.0       # 기존 점수 보존
+    assert row.send_recommended is True      # 발송추천 보존
+    assert row.sent is True                  # 발송 상태 보존
+
+
 def test_pipeline_dedup_merges_similar_titles(tmp_path):
     st = Storage(tmp_path / "p.db")
     collected = [_raw("https://t/1", "우리금융 AI 플랫폼 확대 발표"),

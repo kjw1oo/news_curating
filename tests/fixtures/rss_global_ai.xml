@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>GoogleNews AI</title>
+    <link>https://news.google.com/</link>
+    <description>AI headlines</description>
+    <item>
+      <title>OpenAI unveils new frontier model - TechCrunch</title>
+      <link>https://techcrunch.com/2026/05/29/openai-frontier-model/?utm_source=googlenews</link>
+      <guid>https://techcrunch.com/2026/05/29/openai-frontier-model/</guid>
+      <pubDate>Thu, 29 May 2026 08:30:00 GMT</pubDate>
+      <description>OpenAI announced a new model with improved reasoning capabilities.</description>
+      <source url="https://techcrunch.com">TechCrunch</source>
+    </item>
+    <item>
+      <title>Anthropic raises Series F led by major investors</title>
+      <link>https://www.reuters.com/technology/anthropic-funding-2026/</link>
+      <pubDate>Wed, 28 May 2026 14:15:00 +0000</pubDate>
+      <description>The AI safety lab closed a large funding round.</description>
+      <source url="https://www.reuters.com">Reuters</source>
+    </item>
+    <item>
+      <title>Item with no link should be skipped</title>
+      <pubDate>Wed, 28 May 2026 10:00:00 GMT</pubDate>
+      <description>No link here.</description>
+    </item>
+  </channel>
+</rss>

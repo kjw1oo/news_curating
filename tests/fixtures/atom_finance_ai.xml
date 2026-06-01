@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Finextra Headlines</title>
+  <link href="https://www.finextra.com/"/>
+  <updated>2026-05-29T09:00:00Z</updated>
+  <entry>
+    <title>JPMorgan deploys AI assistant across trading desks</title>
+    <link href="https://www.finextra.com/newsarticle/jpmorgan-ai-trading"/>
+    <id>tag:finextra.com,2026:jpmorgan-ai-trading</id>
+    <updated>2026-05-29T08:00:00Z</updated>
+    <summary>The bank rolled out a generative AI tool to thousands of staff.</summary>
+  </entry>
+  <entry>
+    <title>Fintech startup launches AI fraud detection</title>
+    <link href="https://www.finextra.com/newsarticle/fintech-fraud-ai"/>
+    <id>tag:finextra.com,2026:fintech-fraud-ai</id>
+    <published>2026-05-28T11:30:00+00:00</published>
+    <content type="html">A new platform claims to cut false positives in fraud screening.</content>
+  </entry>
+</feed>
