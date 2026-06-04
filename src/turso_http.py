@@ -8,8 +8,13 @@ import base64
 import httpx
 
 
+def _clean(s) -> str:
+    """BOM(U+FEFF)·앞뒤 공백 제거 — env 주입 과정에서 끼어든 BOM이 헤더/URL을 깨뜨리는 것 방지."""
+    return (s or "").replace("﻿", "").strip()
+
+
 def _to_http(url: str) -> str:
-    u = (url or "").strip()
+    u = _clean(url)
     if u.startswith("libsql://"):
         u = "https://" + u[len("libsql://"):]
     elif u.startswith("ws://"):
@@ -69,6 +74,7 @@ class _Cursor:
 
 class TursoConnection:
     def __init__(self, url, token, timeout=30.0):
+        token = _clean(token)
         self._url = _to_http(url) + "/v2/pipeline"
         self._headers = {"Authorization": f"Bearer {token}"} if token else {}
         self._client = httpx.Client(timeout=timeout)

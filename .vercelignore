@@ -1,0 +1,13 @@
+.venv/
+venv/
+.git/
+data/
+tests/
+.claude/
+__pycache__/
+**/__pycache__/
+*.db
+*.pyc
+node_modules/
+.env
+ms-playwright/
