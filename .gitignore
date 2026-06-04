@@ -8,3 +8,4 @@ data/*.db
 data/_*
 .claude/scheduled_tasks.lock
 .claude/scheduled_tasks.json
+.vercel
