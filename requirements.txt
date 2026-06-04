@@ -9,6 +9,4 @@ feedparser>=6.0
 lxml>=5.0
 cssselect>=1.2
 anthropic>=0.40
-# 클라우드 DB(Turso) 연결 — TURSO_DATABASE_URL 설정 시 사용(Vercel/리눅스). 로컬은 표준 sqlite3.
-# Windows엔 사전빌드 휠이 없어(Rust) 리눅스에서만 설치(Vercel 빌드 환경=리눅스).
-libsql-experimental>=0.0.40 ; sys_platform == "linux"
+# 클라우드 DB(Turso) 연결은 src/turso_http.py가 httpx(위 의존성)로 처리 — 별도 드라이버 불필요.

@@ -37,18 +37,38 @@ _SCHEMA = [
 ]
 
 
+def _load_dotenv():
+    """프로젝트 루트의 .env를 1회 로드(이미 설정된 환경변수는 덮지 않음).
+
+    로컬에서 TURSO_DATABASE_URL/TOKEN을 .env로만 두고 파이프라인·서버가 자동으로
+    Turso를 쓰게 한다. Vercel은 대시보드에서 env를 직접 주입하므로 .env가 없어도 됨.
+    """
+    if os.environ.get("TURSO_DATABASE_URL") or os.environ.get("_DOTENV_LOADED"):
+        return
+    os.environ["_DOTENV_LOADED"] = "1"
+    env = Path(".env")
+    if not env.exists():
+        return
+    for line in env.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip())
+
+
 def _connect(db_path):
     """로컬 SQLite(기본) 또는 원격 libSQL/Turso 연결.
 
-    환경변수 TURSO_DATABASE_URL이 있으면 libSQL(원격 호스팅 SQLite)로 연결한다 —
-    Vercel 등 서버리스에서 같은 DB를 읽기 위함. 없으면 로컬 파일 sqlite3.
+    환경변수 TURSO_DATABASE_URL(또는 .env)이 있으면 Turso(원격 호스팅 SQLite)로 연결한다 —
+    로컬 파이프라인·서버·Vercel이 같은 DB를 공유하기 위함. 없으면 로컬 파일 sqlite3.
     어느 쪽이든 SQL과 ? 플레이스홀더는 동일하다(libSQL=호스팅된 SQLite).
     """
+    _load_dotenv()
     url = os.environ.get("TURSO_DATABASE_URL")
     if url:
-        import libsql_experimental as libsql  # Vercel 전용 의존성
+        from src.turso_http import connect as turso_connect  # 순수 httpx, Rust 불필요
         token = os.environ.get("TURSO_AUTH_TOKEN")
-        return libsql.connect(database=url, auth_token=token), True
+        return turso_connect(url, token), True
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     return sqlite3.connect(str(db_path), check_same_thread=False), False
 
@@ -156,11 +176,10 @@ class Storage:
     def add_feedback(self, news_id: str, kind: str, note: str = "", now=None) -> dict:
         now = now or datetime.now(timezone.utc)
         created_at = now.isoformat()
-        self.conn.execute(
+        cur = self.conn.execute(
             "INSERT INTO feedback (news_id, kind, note, created_at) VALUES (?,?,?,?)",
             (news_id, kind, note or "", created_at))
-        # last_insert_rowid()는 sqlite3·libSQL 모두 지원(lastrowid 속성 대신 SQL로 조회).
-        rid = self.conn.execute("SELECT last_insert_rowid() AS r").fetchone()[0]
+        rid = cur.lastrowid  # sqlite3·Turso 커서 모두 lastrowid 제공
         self.conn.commit()
         return {"id": rid, "news_id": news_id, "kind": kind,
                 "note": note or "", "created_at": created_at}
