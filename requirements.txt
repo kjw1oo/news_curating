@@ -1,13 +1,14 @@
-scrapling>=0.2
-feedparser>=6.0
-anthropic>=0.40
+# 런타임 의존성 (로컬 파이프라인·서버 + Vercel 배포 공용).
+# 토스 수집이 내부 JSON API(httpx)로 바뀌어 scrapling/playwright/curl_cffi는 더 이상 불필요.
 fastapi>=0.110
 uvicorn>=0.29
+pydantic>=2.0
 pyyaml>=6.0
-pytest>=8.0
 httpx>=0.27
+feedparser>=6.0
 lxml>=5.0
 cssselect>=1.2
-# 라이브 크롤링(StealthyFetcher) 런타임 의존성. 브라우저 바이너리는 `scrapling install` 필요.
-curl_cffi>=0.7
-playwright>=1.40
+anthropic>=0.40
+# 클라우드 DB(Turso) 연결 — TURSO_DATABASE_URL 설정 시 사용(Vercel/리눅스). 로컬은 표준 sqlite3.
+# Windows엔 사전빌드 휠이 없어(Rust) 리눅스에서만 설치(Vercel 빌드 환경=리눅스).
+libsql-experimental>=0.0.40 ; sys_platform == "linux"
