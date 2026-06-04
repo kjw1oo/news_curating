@@ -3,3 +3,8 @@ __pycache__/
 .venv/
 data/*.db
 .env
+
+# 런타임 산출물
+data/_*
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks.json
