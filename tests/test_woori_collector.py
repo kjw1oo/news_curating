@@ -113,6 +113,19 @@ def test_parse_toss_news_json_category_param():
     assert items and all(it.category == Category.DOMESTIC_FINANCE_AI for it in items)
 
 
+def test_enrich_link_urls_replaces_url_but_keeps_id():
+    from src.collectors.woori import enrich_link_urls
+    data = json.loads(Path("tests/fixtures/toss_news.json").read_text(encoding="utf-8"))
+    items = parse_toss_news_json(data)
+    before_ids = [it.id for it in items]
+    # resolver: 첫 항목만 원문 url 제공, 나머지는 None(토스 url 유지)
+    mapping = {"edaily_2026060106300000199": "https://www.edaily.co.kr/news/x"}
+    enrich_link_urls(items, mapping.get)
+    assert [it.id for it in items] == before_ids               # id(중복키) 불변
+    assert items[0].url == "https://www.edaily.co.kr/news/x"    # 원문으로 교체
+    assert items[1].url.startswith("https://www.tossinvest.com/news/")  # 미확보 → 토스 url 유지
+
+
 def test_build_toss_collectors_from_config():
     cfg = {"sources": {
         "woori": {"type": "toss", "name": "우리금융", "toss_stock": "A316140", "category": "woori"},
