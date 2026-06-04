@@ -70,7 +70,8 @@ def create_app(storage, config, run_collect):
 
     @app.get("/api/config")
     def get_config():
-        return config
+        # is_remote: 클라우드(Turso) 배포 여부 — 프론트가 수집 버튼 노출을 결정한다.
+        return {**(config or {}), "is_remote": bool(getattr(storage, "is_remote", False))}
 
     @app.post("/api/collect")
     def collect():

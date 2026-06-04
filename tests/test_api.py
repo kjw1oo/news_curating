@@ -104,4 +104,6 @@ def test_config_endpoint_echoes_injected_config(tmp_path):
     st = Storage(tmp_path / "f.db")
     cfg = {"thresholds": {"domestic_finance_ai": 4.0}}
     client = TestClient(create_app(storage=st, config=cfg, run_collect=lambda: {"stored": 0}))
-    assert client.get("/api/config").json() == cfg
+    got = client.get("/api/config").json()
+    # config를 그대로 에코하되 is_remote 플래그(로컬=False)를 덧붙인다.
+    assert got == {**cfg, "is_remote": False}
