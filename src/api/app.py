@@ -68,6 +68,12 @@ def create_app(storage, config, run_collect):
         return _wrap([it for it in storage.query(max_age_days=d) if it.send_recommended],
                      collapse=bool(collapse))
 
+    @app.get("/api/status")
+    def status():
+        """마지막 실행(수집) 시각·전체 건수 — 헤더 표시용."""
+        return {"last_collected_at": storage.last_collected_at(),
+                "total": storage.count()}
+
     @app.get("/api/config")
     def get_config():
         # is_remote: 클라우드(Turso) 배포 여부 — 프론트가 수집 버튼 노출을 결정한다.

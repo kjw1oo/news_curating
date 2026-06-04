@@ -235,6 +235,24 @@
       font-size: var(--fs-sm);
       color: var(--text-dim);
     }
+
+    /* 마지막 실행(수집) 시각 — 헤더 우측 표시 */
+    .last-run {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: var(--fs-sm);
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .last-run:empty { display: none; }
+    .last-run .lr-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent); flex-shrink: 0;
+    }
+    .last-run .lr-label { opacity: .85; }
+    .last-run .lr-time { color: var(--text); font-variant-numeric: tabular-nums; }
+    .last-run .lr-rel  { color: var(--text-dim); }
     .status-ok  { color: var(--c-global-finance); }
     .status-err { color: var(--score-high); }
     .config-empty { color: var(--text-dim); font-size: var(--fs-sm); }
@@ -1170,6 +1188,7 @@
         </div>
       </div>
       <div class="header-actions">
+        <div id="last-run" class="last-run" aria-live="polite" aria-atomic="true"></div>
         <div id="collect-status" class="collect-status" aria-live="polite" aria-atomic="true"></div>
         <button id="collect-btn" class="btn btn-primary" onclick="collect()">
           수집 실행
@@ -1387,6 +1406,41 @@ async function loadConfig() {
     el.innerHTML = `<span class="config-label">임계값</span>${items}`;
   } catch (e) {
     el.innerHTML = '<span class="config-label">임계값</span><span class="config-empty">설정을 불러올 수 없습니다.</span>';
+  }
+}
+
+// ─── 마지막 실행(수집) 시각 ───────────────────────────────
+function fmtLastRun(d) {
+  const min = Math.round((new Date() - d) / 60000);
+  let rel;
+  if (min < 1)        rel = '방금 전';
+  else if (min < 60)  rel = min + '분 전';
+  else if (min < 1440) rel = Math.floor(min / 60) + '시간 전';
+  else                rel = Math.floor(min / 1440) + '일 전';
+  const p = n => String(n).padStart(2, '0');
+  const abs = `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  return { abs, rel };
+}
+
+async function loadStatus() {
+  const el = document.getElementById('last-run');
+  if (!el) return;
+  try {
+    const s = await (await fetch('/api/status')).json();
+    const d = s && s.last_collected_at ? new Date(s.last_collected_at) : null;
+    if (d && !isNaN(d)) {
+      const { abs, rel } = fmtLastRun(d);
+      el.innerHTML =
+        '<span class="lr-dot" aria-hidden="true"></span>' +
+        '<span class="lr-label">마지막 수집</span>' +
+        `<span class="lr-time">${abs}</span>` +
+        `<span class="lr-rel">· ${rel}</span>`;
+      el.title = d.toLocaleString('ko-KR');
+    } else {
+      el.innerHTML = '';
+    }
+  } catch (e) {
+    el.innerHTML = '';
   }
 }
 
@@ -1915,6 +1969,7 @@ async function collect() {
       : '수집 완료';
     setStatusAll(COLLECT_STAT, `<span class="status-ok" aria-hidden="true">✓</span><span>${msg}</span>`);
     await load();
+    loadStatus();
   } catch (e) {
     setStatusAll(COLLECT_STAT, `<span class="status-err" aria-hidden="true">✗</span><span>수집 실패: ${escapeHtml(e.message)}</span>`);
   } finally {
@@ -2027,6 +2082,7 @@ initTabs();
 renderSkeleton('overview-alerts', 2);
 renderSkeleton('news', 4);
 loadConfig();
+loadStatus();
 load();
 </script>
 </body>

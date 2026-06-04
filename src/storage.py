@@ -120,6 +120,17 @@ class Storage:
         self.conn.commit()
         return len(ids)
 
+    def last_collected_at(self) -> str | None:
+        """가장 최근 수집 시각(news_items.collected_at의 최댓값) — 마지막 실행시각 표시용."""
+        rows = self._dicts(self.conn.execute(
+            "SELECT MAX(collected_at) AS t FROM news_items"))
+        return rows[0]["t"] if rows and rows[0]["t"] else None
+
+    def count(self) -> int:
+        """전체 뉴스 건수."""
+        return int(self._dicts(self.conn.execute(
+            "SELECT COUNT(*) AS c FROM news_items"))[0]["c"])
+
     def unscored(self) -> list[NewsItem]:
         """아직 중요도 점수가 없는(importance_score IS NULL) 항목 — 배치 채점 대상."""
         cur = self.conn.execute(

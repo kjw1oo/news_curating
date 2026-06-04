@@ -100,6 +100,29 @@ def test_news_collapses_duplicate_events(tmp_path):
     assert full["total"] == 3                            # collapse=0이면 전부 표시
 
 
+def test_status_endpoint_reports_last_collected_and_count(tmp_path):
+    st = Storage(tmp_path / "s.db")
+    st.upsert([
+        NewsItem(id=make_id("a"), category=Category.GLOBAL_AI, title="옛", url="a", source="s",
+                 published_at="2026-05-29T00:00:00+09:00", collected_at="2026-06-01T09:00:00+09:00",
+                 summary_raw="s", importance_score=9.0, send_recommended=True),
+        NewsItem(id=make_id("b"), category=Category.GLOBAL_AI, title="새", url="b", source="s",
+                 published_at="2026-05-29T00:00:00+09:00", collected_at="2026-06-04T15:03:00+09:00",
+                 summary_raw="s", importance_score=9.0, send_recommended=True),
+    ])
+    client = TestClient(create_app(storage=st, config={}, run_collect=lambda: {"stored": 0}))
+    body = client.get("/api/status").json()
+    assert body["total"] == 2
+    assert body["last_collected_at"] == "2026-06-04T15:03:00+09:00"  # 최신 collected_at
+
+
+def test_status_endpoint_empty_db(tmp_path):
+    st = Storage(tmp_path / "e.db")
+    client = TestClient(create_app(storage=st, config={}, run_collect=lambda: {"stored": 0}))
+    body = client.get("/api/status").json()
+    assert body == {"last_collected_at": None, "total": 0}
+
+
 def test_config_endpoint_echoes_injected_config(tmp_path):
     st = Storage(tmp_path / "f.db")
     cfg = {"thresholds": {"domestic_finance_ai": 4.0}}
