@@ -73,7 +73,10 @@ class _Cursor:
 
 
 class TursoConnection:
-    def __init__(self, url, token, timeout=30.0):
+    # 한 /v2/pipeline 요청에 담는 최대 문장 수 — 수백 건을 한 요청에 몰면 ReadTimeout.
+    BATCH = 100
+
+    def __init__(self, url, token, timeout=60.0):
         token = _clean(token)
         self._url = _to_http(url) + "/v2/pipeline"
         self._headers = {"Authorization": f"Bearer {token}"} if token else {}
@@ -102,9 +105,11 @@ class TursoConnection:
         return _Cursor(results[0] if results else None)
 
     def executemany(self, sql, seq_of_args):
+        # 큰 배치는 BATCH 단위로 쪼개 여러 요청으로 보낸다(단일 거대 POST의 ReadTimeout 방지).
         seq = list(seq_of_args)
-        if seq:
-            self._pipeline([(sql, tuple(a)) for a in seq])
+        for i in range(0, len(seq), self.BATCH):
+            chunk = seq[i:i + self.BATCH]
+            self._pipeline([(sql, tuple(a)) for a in chunk])
         return _Cursor(None)
 
     def commit(self):

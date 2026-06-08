@@ -108,7 +108,8 @@ def test_feedback_get_empty_wrapped(tmp_path):
 def test_existing_news_contract_unchanged(tmp_path):
     st = Storage(tmp_path / "j.db"); _seed(st)
     client = _client(st)
-    body = client.get("/api/news").json()
+    # days=0 으로 표시창 비활성 — 시드 발행일이 오래돼도 계약 검증이 날짜에 휘둘리지 않게.
+    body = client.get("/api/news?days=0").json()
     assert "items" in body and "total" in body
     assert body["items"][0]["importance_reason"] == "근거"
     assert body["items"][0]["category_label"] == "국내 금융 AI"
