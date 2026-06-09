@@ -61,7 +61,8 @@ AI 뉴스 모니터링 시스템의 운영 사이클을 통째로 돈다. 핵심
 > - **global_finance_ai**: 금융권을 실제로 흔드는 대형 AI 사건만 9+ (대형기관 대규모 공식 AI전략·전사도입·시장구조 변화·중대 규제). 일상 도입·파일럿·벤더발표·단순언급 5↓.
 > - **domestic_finance_ai / woori**: 금융사의 실제 AI·데이터 활동(서비스·조직·투자·마이데이터) 4+. **금융과 무관한 기사(반도체·일반경제·정치 등)는 2↓.**
 > 제목·출처·요약 근거로만 판단하고 지어내지 마라.
-> 출력: `data/_scores_<i>.json`에 `{"<id>": {"score": 6.5, "reason": "1~2문장", "send": true}, ...}` — 모든 입력 id 포함, score는 0~10 숫자, send는 카테고리 임계값(global_ai 9.5 / global_finance 9.0 / domestic 6.5 / woori 5.5) 이상이면 true 경향.
+> **`reason`은 영어 기사라도 반드시 한국어로 작성한다(대시보드 카드 설명에 그대로 노출됨 — 영어 근거 금지).**
+> 출력: `data/_scores_<i>.json`에 `{"<id>": {"score": 6.5, "reason": "1~2문장 한국어", "send": true}, ...}` — 모든 입력 id 포함, score는 0~10 숫자, send는 카테고리 임계값(global_ai 9.5 / global_finance 9.0 / domestic 6.5 / woori 5.5) 이상이면 true 경향.
 
 채점 기준은 `src/filters/scorer.py`의 `_PROMPTS`(카테고리별 평가 프롬프트)와 일치해야 한다 — export가
 각 항목에 그 `criteria`를 이미 담아 보내므로, 에이전트는 그걸 우선 따른다. 모든 에이전트가 끝날 때까지 기다린다.
