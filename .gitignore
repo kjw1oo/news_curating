@@ -9,3 +9,4 @@ data/_*
 .claude/scheduled_tasks.lock
 .claude/scheduled_tasks.json
 .vercel
+scripts/.headless_token
