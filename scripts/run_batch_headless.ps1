@@ -2,8 +2,9 @@
 # Windows 작업 스케줄러가 8·13·17시에 호출 → Claude 앱/세션 없이도 배치가 돈다.
 #
 # 인증: 데스크톱 앱의 OAuth access 토큰은 짧게 만료되고 헤드리스는 갱신을 못 해 401난다.
-#   → scripts\.headless_token (gitignore됨)에 `claude setup-token`으로 만든 '장기 토큰'을
-#     저장해 두면, 이 스크립트가 ANTHROPIC_API_KEY로 주입해 안정적으로 인증한다.
+#   → scripts\.headless_token (gitignore됨)에 `claude setup-token`으로 만든 장기 토큰(sk-ant-oat...)을
+#     저장해 두면, 이 스크립트가 CLAUDE_CODE_OAUTH_TOKEN으로 주입해 안정적으로 인증한다.
+#     (OAuth 토큰은 ANTHROPIC_API_KEY가 아니라 CLAUDE_CODE_OAUTH_TOKEN으로 줘야 동작)
 #
 # ※ 이 파일은 반드시 UTF-8(BOM)로 저장한다. Windows PowerShell 5.1은 BOM 없는
 #    UTF-8 스크립트의 한글을 깨뜨리므로 경로는 $PSScriptRoot로 런타임에 구한다.
@@ -22,8 +23,8 @@ $tokFile = Join-Path $PSScriptRoot '.headless_token'
 if (Test-Path -LiteralPath $tokFile) {
   $tok = (Get-Content -LiteralPath $tokFile -Raw).Trim()
   if ($tok) {
-    $env:ANTHROPIC_API_KEY = $tok
-    "토큰 주입됨(길이 $($tok.Length))" | Out-File -LiteralPath $log -Append -Encoding utf8
+    $env:CLAUDE_CODE_OAUTH_TOKEN = $tok
+    "OAuth 토큰 주입됨(길이 $($tok.Length))" | Out-File -LiteralPath $log -Append -Encoding utf8
   }
 } else {
   "경고: scripts\.headless_token 없음 — OAuth 자격증명에 의존(만료 시 401 가능)" | Out-File -LiteralPath $log -Append -Encoding utf8
