@@ -1,0 +1,20 @@
+# 빌드 컨텍스트에서 제외 — 이미지 작게, 비밀 제외
+.venv/
+venv/
+.git/
+.gitignore
+data/
+tests/
+.claude/
+_workspace/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.db
+node_modules/
+.env
+scripts/
+ms-playwright/
+*.md
+.vercel/
+vercel.json
