@@ -3,12 +3,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel
 from src.models import LABELS
-from src.notifiers.service import run_send
 from src.filters.postprocess import group_events, _best_of
 
 _WEB = Path(__file__).resolve().parent.parent / "web"
 
-_FEEDBACK_KINDS = {"false_positive", "false_negative", "good"}
+# 피드백 종류: good(정상) / false_positive(비정상 — 중요뉴스로 잘못 분류).
+_FEEDBACK_KINDS = {"false_positive", "good"}
 
 
 def _collapse(items):
@@ -82,14 +82,6 @@ def create_app(storage, config, run_collect):
     @app.post("/api/collect")
     def collect():
         return run_collect()
-
-    @app.post("/api/send")
-    def send():
-        return run_send(storage, config)
-
-    @app.get("/api/history")
-    def history():
-        return _wrap_rows(storage.history())
 
     @app.post("/api/feedback")
     def post_feedback(body: FeedbackIn):

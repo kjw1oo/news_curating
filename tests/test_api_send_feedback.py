@@ -19,55 +19,6 @@ def _client(st, config=None):
                                  run_collect=lambda: {"stored": 0}))
 
 
-# ─── /api/send ─────────────────────────────────────────────
-def test_send_dispatches_recommended_and_records_history(tmp_path):
-    st = Storage(tmp_path / "a.db"); _seed(st)
-    client = _client(st, {"notifiers": ["console"]})
-    r = client.post("/api/send")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["sent"] == 1 and body["batch_id"]
-    # 이력 반영
-    h = client.get("/api/history").json()
-    assert "items" in h and "total" in h
-    assert h["total"] == 1
-    assert h["items"][0]["news_id"] == make_id("u1")
-    assert h["items"][0]["category_label"] == "국내 금융 AI"
-
-
-def test_send_is_idempotent_within_24h(tmp_path):
-    st = Storage(tmp_path / "b.db"); _seed(st)
-    client = _client(st, {"notifiers": ["console"]})
-    assert client.post("/api/send").json()["sent"] == 1
-    # 두 번째 호출은 24h 재발송 차단으로 0건
-    assert client.post("/api/send").json()["sent"] == 0
-    assert client.get("/api/history").json()["total"] == 1
-
-
-def test_send_respects_monthly_cap(tmp_path):
-    st = Storage(tmp_path / "c.db")
-    _seed(st, id=make_id("g1"), url="https://t.com/g1",
-          category=Category.GLOBAL_FINANCE_AI, importance_score=9.0)
-    _seed(st, id=make_id("g2"), url="https://t.com/g2",
-          category=Category.GLOBAL_FINANCE_AI, importance_score=8.0)
-    client = _client(st, {"notifiers": ["console"],
-                          "monthly_cap": {"global_finance_ai": 1}})
-    assert client.post("/api/send").json()["sent"] == 1
-
-
-def test_send_empty_returns_zero(tmp_path):
-    st = Storage(tmp_path / "d.db")
-    client = _client(st, {"notifiers": ["console"]})
-    body = client.post("/api/send").json()
-    assert body["sent"] == 0 and body["batch_id"] is None
-
-
-def test_history_empty_wrapped(tmp_path):
-    st = Storage(tmp_path / "e.db")
-    client = _client(st)
-    assert client.get("/api/history").json() == {"items": [], "total": 0}
-
-
 # ─── /api/feedback ─────────────────────────────────────────
 def test_feedback_post_then_get(tmp_path):
     st = Storage(tmp_path / "f.db"); _seed(st)
@@ -92,10 +43,10 @@ def test_feedback_rejects_invalid_kind(tmp_path):
 def test_feedback_accepts_all_valid_kinds(tmp_path):
     st = Storage(tmp_path / "h.db"); _seed(st)
     client = _client(st)
-    for kind in ("false_positive", "false_negative", "good"):
+    for kind in ("false_positive", "good"):
         assert client.post("/api/feedback",
                            json={"news_id": "x", "kind": kind}).status_code == 200
-    assert client.get("/api/feedback").json()["total"] == 3
+    assert client.get("/api/feedback").json()["total"] == 2
 
 
 def test_feedback_get_empty_wrapped(tmp_path):

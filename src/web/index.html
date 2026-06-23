@@ -220,13 +220,6 @@
     }
     .btn-ghost:hover:not(:disabled) { background: var(--surface-3); }
 
-    .send-status {
-      font-size: var(--fs-sm);
-      color: var(--text-dim);
-    }
-    .send-status .status-ok  { color: var(--c-global-finance); }
-    .send-status .status-err { color: var(--score-high); }
-
     /* ─── 수집 상태 ─────────────────────────────────────────── */
     .collect-status {
       display: flex;
@@ -606,61 +599,6 @@
     .fb-btn:disabled { cursor: default; }
     .fb-btn.fb-good.is-active     { background: var(--c-global-finance-bg); color: var(--c-global-finance); border-color: var(--c-global-finance); }
     .fb-btn.fb-fp.is-active       { background: var(--score-high-bg);       color: var(--score-high);       border-color: var(--score-high); }
-    .fb-btn.fb-fn.is-active       { background: var(--score-mid-bg);        color: var(--score-mid);        border-color: var(--score-mid); }
-
-    /* ─── 발송 이력 ───────────────────────────────────────── */
-    .history-list {
-      display: flex;
-      flex-direction: column;
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      overflow: hidden;
-      background: var(--surface);
-    }
-    .history-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      font-size: var(--fs-sm);
-    }
-    .history-row:last-child { border-bottom: 0; }
-    .history-row .h-time {
-      color: var(--text-dim);
-      font-size: var(--fs-xs);
-      flex-shrink: 0;
-      min-width: 116px;
-    }
-    .history-row .h-title {
-      flex: 1;
-      color: var(--text);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .history-row .h-channel {
-      flex-shrink: 0;
-      font-size: var(--fs-xs);
-      color: var(--text-dim);
-      background: var(--surface-2);
-      border: 1px solid var(--border-soft);
-      border-radius: var(--r-sm);
-      padding: 2px 8px;
-    }
-    .history-empty {
-      padding: 28px 16px;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: var(--fs-sm);
-    }
-
-    @media (max-width: 640px) {
-      /* 모바일 발송이력 — 제목 전체폭 1행, 그 아래 시각+채널 메타 1행으로 스택 */
-      .history-row { flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
-      .history-row .h-title { white-space: normal; order: -1; flex: 1 0 100%; font-weight: 500; }
-      .history-row .h-time { min-width: 0; }
-    }
 
     /* ─── 스켈레톤 로딩 ─────────────────────────────────────── */
     .skeleton-card {
@@ -1217,9 +1155,8 @@
       <!-- ═══ 탭 1: 개요 ═══════════════════════════════════ -->
       <section id="panel-overview" class="tabpanel" role="tabpanel" aria-labelledby="tab-overview" tabindex="0">
 
-        <!-- 수집은 헤더에 상시 노출되므로 여기선 발송 액션만(중복 제거) -->
+        <!-- 수집 상태(헤더 수집 버튼의 결과) 표시줄 -->
         <div class="overview-actions">
-          <button id="ov-send-btn" class="btn btn-primary" onclick="sendAlerts()">발송</button>
           <span id="ov-action-status" class="oa-status" aria-live="polite" aria-atomic="true"></span>
         </div>
 
@@ -1233,16 +1170,10 @@
 
         <div class="divider"></div>
 
-        <!-- 카테고리별 미니 섹션 + 발송 이력 요약 -->
+        <!-- 카테고리별 미니 섹션 -->
         <h2 class="tab-section-title">카테고리별 최신 뉴스</h2>
         <p class="tab-section-desc">각 카테고리의 최신 항목과 중요뉴스 표식을 한눈에</p>
-        <div class="overview-grid">
-          <div id="overview-cats"></div>
-          <div>
-            <h3 class="cat-mini-head cm-title" style="border:0;padding:0 0 12px 0;font-size:var(--fs-base);">최근 발송 이력</h3>
-            <div id="overview-history"></div>
-          </div>
-        </div>
+        <div id="overview-cats"></div>
 
         <div class="divider"></div>
 
@@ -1256,8 +1187,6 @@
       <section id="panel-important" class="tabpanel" role="tabpanel" aria-labelledby="tab-important" tabindex="0" hidden>
         <div class="overview-actions">
           <h2 class="tab-section-title" style="margin:0">중요뉴스</h2>
-          <span id="imp-send-status" class="send-status" aria-live="polite" aria-atomic="true" style="margin-left:auto"></span>
-          <button id="imp-send-btn" class="btn btn-primary btn-sm" onclick="sendAlerts()">발송</button>
         </div>
         <p class="tab-section-desc">임계값을 초과한 중요 뉴스를 카테고리별로 묶어 표시합니다.</p>
         <div id="important-groups"></div>
@@ -1452,7 +1381,6 @@ const CAT_ORDER = ['global_ai', 'global_finance_ai', 'domestic_finance_ai', 'woo
 const STATE = {
   news:    [],   // 전체 뉴스
   alerts:  [],   // send_recommended=true
-  history: [],   // 발송 이력
   loaded:  false,
   errored: false,
   byCatFilter: 'all',  // 카테고리별 탭의 현재 필터
@@ -1534,9 +1462,7 @@ function buildCard(it, isAlert) {
         <button type="button" class="fb-btn fb-good" data-id="${safeId}" data-kind="good"
                 onclick="sendFeedback(this)" aria-pressed="false" aria-label="정상">👍 정상</button>
         <button type="button" class="fb-btn fb-fp" data-id="${safeId}" data-kind="false_positive"
-                onclick="sendFeedback(this)" aria-pressed="false" aria-label="오발송">👎 오발송</button>
-        <button type="button" class="fb-btn fb-fn" data-id="${safeId}" data-kind="false_negative"
-                onclick="sendFeedback(this)" aria-pressed="false" aria-label="누락">⚠️ 누락</button>
+                onclick="sendFeedback(this)" aria-pressed="false" aria-label="비정상">👎 비정상</button>
       </div>` : '';
 
   return `
@@ -1680,9 +1606,6 @@ function renderOverview() {
     });
     catsEl.innerHTML = html || `<div class="cat-mini"><div class="cat-mini-empty">수집된 뉴스가 없습니다.</div></div>`;
   }
-
-  // 4) 발송 이력 요약 (소형 — 최근 5건)
-  renderHistoryInto('overview-history', STATE.history.slice(0, 5));
 }
 
 // ─── 중요뉴스 탭 렌더 (카테고리별 그룹) ───────────────────
@@ -1826,30 +1749,6 @@ function renderInto(elId, items, isAlert, emptyOpts) {
   el.innerHTML = arr.map(it => buildCard(it, isAlert)).join('');
 }
 
-// 공통: 발송 이력을 임의 컨테이너에 렌더
-function renderHistoryInto(elId, items) {
-  const el  = document.getElementById(elId);
-  if (!el) return;
-  const arr = Array.isArray(items) ? items : [];
-  el.removeAttribute('aria-busy');
-  if (arr.length === 0) {
-    el.innerHTML = `<div class="history-list"><div class="history-empty">아직 발송된 알림이 없습니다.</div></div>`;
-    return;
-  }
-  const rows = arr.map(h => {
-    const sentRaw = escapeHtml(h.sent_at || '');
-    const timeHtml = h.sent_at
-      ? `<time class="h-time" datetime="${sentRaw}">${formatDate(h.sent_at)}</time>`
-      : `<span class="h-time">—</span>`;
-    return `<div class="history-row" role="listitem">
-        ${timeHtml}
-        <span class="h-title" title="${escapeHtml(h.title || '')}">${catPill(h.category)} ${escapeHtml(h.title || '(제목 없음)')}</span>
-        <span class="h-channel">${escapeHtml(h.channel || '')}</span>
-      </div>`;
-  }).join('');
-  el.innerHTML = `<div class="history-list" role="list">${rows}</div>`;
-}
-
 // ─── 탭 카운트 배지 갱신 ───────────────────────────────────
 function updateTabCounts() {
   const ic = document.getElementById('tabcount-important');
@@ -1876,20 +1775,18 @@ async function load() {
     renderSkeleton('news', 4);
   }
   try {
-    const [aRes, nRes, hRes] = await Promise.all([
+    const [aRes, nRes] = await Promise.all([
       fetch('/api/alerts'),
-      fetch('/api/news'),
-      fetch('/api/history')
+      fetch('/api/news')
     ]);
     if (!aRes.ok || !nRes.ok) throw new Error(`서버 응답 오류 (alerts:${aRes.status} / news:${nRes.status})`);
     const [a, n] = await Promise.all([aRes.json(), nRes.json()]);
     STATE.alerts  = Array.isArray(a.items) ? a.items : [];
     STATE.news    = Array.isArray(n.items) ? n.items : [];
-    STATE.history = hRes.ok ? (await hRes.json()).items || [] : [];
     STATE.errored = false;
   } catch (e) {
     showGlobalError('뉴스 데이터를 불러오는 중 오류가 발생했습니다. (' + e.message + ')');
-    STATE.alerts = []; STATE.news = []; STATE.history = [];
+    STATE.alerts = []; STATE.news = [];
     STATE.errored = true;
   }
   STATE.loaded = true;
@@ -1905,31 +1802,9 @@ function setDisabledAll(ids, disabled) {
   ids.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = disabled; });
 }
 
-const SEND_BTNS    = ['ov-send-btn', 'imp-send-btn'];
-const SEND_STATUS  = ['ov-action-status', 'imp-send-status'];
 // 수집은 헤더 단일 버튼(개요 중복 제거). 상태도 헤더 + 개요 상태줄에 함께 표기.
 const COLLECT_BTNS = ['collect-btn'];
 const COLLECT_STAT = ['collect-status', 'ov-action-status'];
-
-// ─── 알림 발송 ─────────────────────────────────────────────
-async function sendAlerts() {
-  setDisabledAll(SEND_BTNS, true);
-  setStatusAll(SEND_STATUS, '<span class="spinner" aria-hidden="true"></span><span> 발송 중...</span>');
-  try {
-    const res = await fetch('/api/send', { method: 'POST' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const r = await res.json();
-    const sent = (r && r.sent) || 0;
-    const msg = sent > 0 ? `${sent}건 발송 완료` : '발송할 신규 알림이 없습니다';
-    setStatusAll(SEND_STATUS, `<span class="status-ok" aria-hidden="true">✓</span><span> ${escapeHtml(msg)}</span>`);
-    await load();
-  } catch (e) {
-    setStatusAll(SEND_STATUS, `<span class="status-err" aria-hidden="true">✗</span><span> 발송 실패: ${escapeHtml(e.message)}</span>`);
-  } finally {
-    setDisabledAll(SEND_BTNS, false);
-    setTimeout(() => { setStatusAll(SEND_STATUS, ''); }, 3500);
-  }
-}
 
 // ─── 피드백 전송 ───────────────────────────────────────────
 async function sendFeedback(btn) {
